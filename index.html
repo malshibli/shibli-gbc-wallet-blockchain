@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHIBLI GBC Wallet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f8fc; margin: 0; padding: 0; text-align: center; }
+        header { background-color: #2b4f81; padding: 20px; color: white; font-size: 20px; }
+        .container { padding: 20px; max-width: 600px; margin: auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-top: 20px; border-radius: 10px; }
+        button { padding: 10px 20px; background: #2b4f81; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>SHIBLI GBC Wallet</h1>
+</header>
+
+<div class="container">
+    <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
+    <button onclick="connectWallet()">Connect MetaMask</button>
+
+    <p class="balance">Wallet Balance: <strong><span id="balance">0</span> GBC</strong></p>
+
+    <h3>Send GBC</h3>
+    <input type="text" id="sendAddress" placeholder="Recipient Wallet Address">
+    <input type="text" id="sendAmount" placeholder="Amount">
+    <button onclick="sendGBC()">Send GBC</button>
+
+    <p id="transactionStatus"></p>
+</div>
+
+<script>
+    let provider, signer, walletAddress;
+    const contractAddress = "0xYourSmartContractAddress"; // Replace with actual contract
+    const contractABI = [
+        // Add the actual contract ABI here
+    ];
+
+    async function connectWallet() {
+        if (!window.ethereum) {
+            alert("Please install MetaMask!");
+            return;
+        }
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        walletAddress = await signer.getAddress();
+        document.getElementById("walletAddress").innerText = walletAddress;
+        getBalance();
+    }
+
+    async function getBalance() {
+        if (!signer) return;
+        const contract = new ethers.Contract(contractAddress, contractABI, provider);
+        let balance = await contract.balanceOf(walletAddress);
+        document.getElementById("balance").innerText = ethers.utils.formatUnits(balance, 18);
+    }
+
+    async function sendGBC() {
+        const recipient = document.getElementById("sendAddress").value;
+        const amount = document.getElementById("sendAmount").value;
+        if (!recipient || !amount) {
+            alert("Enter recipient and amount");
+            return;
+        }
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+        document.getElementById("transactionStatus").innerText = "Transaction Pending...";
+        await tx.wait();
+        document.getElementById("transactionStatus").innerText = "Transaction Successful!";
+        getBalance();
+    }
+</script>
+
+</body>
+</html>
