@@ -72,7 +72,7 @@
   <form onsubmit="return validateRequestAmount();" enctype="multipart/form-data">
     <input type="text" id="fullName" placeholder="Full Name" required><br>
     <input type="text" id="nationalID" placeholder="National ID or Passport Number" required><br>
-    <input type="number" id="requestedAmount" placeholder="Enter amount (Max: 0.0125)" step="0.0001" min="0.0001" max="0.0125" required><br>
+    <input type="number" id="requestedAmount" placeholder="Enter amount (Max: 0.0125)" step="0.0001" min="0.0001" max="0.0125" required oninput="enforceMaxValue(this)">
     <label>Upload ID Document:</label><br>
     <input type="file" id="uploadID" accept=".jpg,.jpeg,.png,.pdf" required><br>
     <label>Upload Face Photo:</label><br>
@@ -81,24 +81,6 @@
   </form>
   <p id="requestMessage" style="color: green; margin-top: 10px;"></p>
 </div>	
-
-	
-<!-- GBC Request Form with Verification -->
-<div style="background: #fff7eb; padding: 20px; margin: 30px auto; max-width: 600px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.08);">
-    <h2 style="color: #2b4f81;">Request Your GBC Entitlement</h2>
-    <p>You may request up to <strong>0.0125 GBC</strong>. Please verify your identity below.</p>
-    <form onsubmit="return validateRequestAmount();" enctype="multipart/form-data">
-        <input type="text" id="fullName" placeholder="Full Name" required><br>
-        <input type="text" id="nationalID" placeholder="National ID or Passport Number" required><br>
-        <input type="number" id="requestedAmount" placeholder="Enter amount (Max: 0.0125)" step="0.0001" min="0.0001" max="0.0125" required><br>
-        <label>Upload ID Document:</label><br>
-        <input type="file" id="uploadID" accept=".jpg,.jpeg,.png,.pdf" required><br>
-        <label>Upload Face Photo:</label><br>
-        <input type="file" id="uploadFace" accept="image/*" capture="user" required><br><br>
-        <button type="submit">Submit Request</button>
-    </form>
-    <p id="requestMessage" style="color: green; margin-top: 10px;"></p>
-</div>
 	
 	
 <div style="background: #f0f8ff; padding: 20px; margin: 30px auto; max-width: 800px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
@@ -494,6 +476,13 @@ function validateRequestAmount() {
 
     document.getElementById("requestMessage").innerText = "Request submitted successfully (Demo Only).";
     return false;
+}
+
+function enforceMaxValue(input) {
+    const max = 0.0125;
+    if (parseFloat(input.value) > max) {
+        input.value = max;
+    }
 }
 	
 </script>
