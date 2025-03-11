@@ -286,21 +286,14 @@
         getBalance();
     }
 
-    <script>
     async function getBalance() {
-        if (!signer) return;
-        try {
-            const contract = new ethers.Contract(contractAddress, contractABI, signer);  // FIXED HERE
-            const balance = await contract.balanceOf(walletAddress);
-            console.log("Raw GBC Balance (wei):", balance.toString());
-            const formattedBalance = ethers.utils.formatUnits(balance, 18);
-            document.getElementById("balance").innerText = formattedBalance + " GBC";
-        } catch (error) {
-            console.error("Balance fetch error:", error);
-            document.getElementById("balance").innerText = "Error";
-        }
-    }
-</script>
+    if (!signer) return;
+    const contract = new ethers.Contract(contractAddress, contractABI, signer); // FIXED HERE
+    const balance = await contract.balanceOf(walletAddress);
+    console.log("Raw Balance:", balance.toString());
+    const formatted = ethers.utils.formatUnits(balance, 18);
+    document.getElementById("balance").innerText = formatted + " GBC";
+}
 
     async function sendGBC() {
         const recipient = document.getElementById("sendAddress").value;
