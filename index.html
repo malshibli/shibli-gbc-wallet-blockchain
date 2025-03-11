@@ -38,7 +38,6 @@
     let provider, signer, walletAddress;
     const contractAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93"; // Replace with actual contract
     const contractABI = [
-        [
 	{
 		"inputs": [
 			{
@@ -272,7 +271,6 @@
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-]
     ];
 
     async function connectWallet() {
@@ -289,11 +287,13 @@
     }
 
     async function getBalance() {
-        if (!signer) return;
-        const contract = new ethers.Contract(contractAddress, contractABI, provider);
-        let balance = await contract.balanceOf(walletAddress);
-        document.getElementById("balance").innerText = ethers.utils.formatUnits(balance, 18);
-    }
+    if (!signer) return;
+    const contract = new ethers.Contract(contractAddress, contractABI, provider);
+    const balance = await contract.balanceOf(walletAddress);
+    console.log("Raw Balance (wei):", balance.toString());
+    const formatted = ethers.utils.formatUnits(balance, 18);
+    document.getElementById("balance").innerText = formatted;
+}
 
     async function sendGBC() {
         const recipient = document.getElementById("sendAddress").value;
