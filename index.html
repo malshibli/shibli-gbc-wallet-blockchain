@@ -288,11 +288,11 @@
 
     async function getBalance() {
     if (!signer) return;
-    const contract = new ethers.Contract(contractAddress, contractABI, provider);
+    const contract = new ethers.Contract(contractAddress, contractABI, signer); // FIXED HERE
     const balance = await contract.balanceOf(walletAddress);
-    console.log("Raw Balance (wei):", balance.toString());
+    console.log("Raw Balance:", balance.toString());
     const formatted = ethers.utils.formatUnits(balance, 18);
-    document.getElementById("balance").innerText = formatted;
+    document.getElementById("balance").innerText = formatted + " GBC";
 }
 
     async function sendGBC() {
