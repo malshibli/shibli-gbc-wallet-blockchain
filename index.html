@@ -309,7 +309,59 @@
         document.getElementById("transactionStatus").innerText = "Transaction Successful!";
         getBalance();
     }
+
+	
 </script>
 
+	<!-- Your other HTML content -->
+
+<!-- Add this corrected code just before closing </body> -->
+<script>
+  async function connectWallet() {
+      if (!window.ethereum) {
+          alert("Please install MetaMask!");
+          return;
+      }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      walletAddress = await signer.getAddress();
+      document.getElementById("walletAddress").innerText = walletAddress;
+      getBalance();
+  }
+
+  async function getBalance() {
+      if (!signer) return;
+      try {
+          const contract = new ethers.Contract(contractAddress, contractABI, signer);
+          const balance = await contract.balanceOf(walletAddress);
+          console.log("Raw Balance:", balance.toString());
+          const formatted = ethers.utils.formatUnits(balance, 18);
+          document.getElementById("balance").innerText = formatted + " GBC";
+      } catch (error) {
+          console.error("Error reading balance:", error);
+          document.getElementById("balance").innerText = "Error";
+      }
+  }
+
+  async function sendGBC() {
+      const recipient = document.getElementById("sendAddress").value;
+      const amount = document.getElementById("sendAmount").value;
+      if (!recipient || !amount) {
+          alert("Enter recipient and amount");
+          return;
+      }
+      const contract = new ethers.Contract(contractAddress, contractABI, signer);
+      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+      document.getElementById("transactionStatus").innerText = "Transaction Pending...";
+      await tx.wait();
+      document.getElementById("transactionStatus").innerText = "Transaction Successful!";
+      getBalance();
+  }
+</script>
+
+</body>
+</html>
+	
 </body>
 </html>
