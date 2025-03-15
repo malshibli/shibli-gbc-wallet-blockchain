@@ -78,54 +78,308 @@
   </ol>
 </div>
 
-<!-- NEW ADMIN APPROVAL SECTION -->
-<div class="section">
+<!-- ADMIN APPROVAL SECTION -->
+<div class="section" style="background:#f0f8ff;">
   <h2><i class="fas fa-user-shield icon"></i> Admin: Approve GBC Request</h2>
-  <p><strong>Send GBC directly to the requester’s wallet (after verifying submission from your email).</strong></p>
-  <input type="text" id="approveWallet" placeholder="Recipient MetaMask Wallet Address (paste from email)" />
-  <input type="number" id="approveAmount" placeholder="Amount to Transfer (Max 100)" step="1" max="100" />
-  <button onclick="sendGBCAdmin()">Send Approved GBC</button>
-  <p id="approvalStatus" style="margin-top:10px; font-style:italic;"></p>
+
+  <p><strong>Connected Wallet:</strong> <span id="adminWalletAddress">Not Connected</span></p>
+  <button onclick="connectAdminWallet()"><i class="fas fa-link icon"></i> Connect MetaMask</button>
+
+  <p><strong>Wallet Balance:</strong> <span id="adminBalance">0</span> GBC</p>
+
+  <input type="text" id="requesterAddress" placeholder="Requester MetaMask Wallet Address" required />
+  <input type="number" id="approvedAmount" placeholder="GBC to Send (Max: 100)" max="100" step="1" required />
+
+  <button onclick="sendApprovedGBC()" style="background-color:#1a7e4e;"><i class="fas fa-paper-plane"></i> Long Click to Send Approved GBC</button>
+
+  <p id="approvalStatus" style="margin-top:10px; font-weight:bold;"></p>
 </div>
 
 <script>
-  let provider, signer, contract;
-  const contractAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93";
-  const contractABI = [ 
-    {"inputs":[{"internalType":"uint256","name":"initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},
-    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-  ];
+    let adminProvider, adminSigner, adminWallet;
+    const contractAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93"; // Your GBC Contract
+    const contractABI = [ {
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "initialSupply",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "allowance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "decimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+    ];
 
-  async function connectAdminWallet() {
-    if (!window.ethereum) return alert("Please install MetaMask!");
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    signer = provider.getSigner();
-    contract = new ethers.Contract(contractAddress, contractABI, signer);
-  }
 
-  async function sendGBCAdmin() {
-    await connectAdminWallet();
-    const recipient = document.getElementById("approveWallet").value;
-    const amount = document.getElementById("approveAmount").value;
-    if (!recipient || !amount) return alert("Please enter wallet and amount.");
-    try {
-      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
-      document.getElementById("approvalStatus").innerText = "Transaction sent. Waiting for confirmation...";
-      await tx.wait();
-      document.getElementById("approvalStatus").innerText = "GBC sent successfully!";
-    } catch (err) {
-      console.error(err);
-      document.getElementById("approvalStatus").innerText = "Transaction failed: " + err.message;
+ ];
+
+    async function connectAdminWallet() {
+        if (!window.ethereum) {
+            alert("Please install MetaMask.");
+            return;
+        }
+        adminProvider = new ethers.providers.Web3Provider(window.ethereum);
+        await adminProvider.send("eth_requestAccounts", []);
+        adminSigner = adminProvider.getSigner();
+        adminWallet = await adminSigner.getAddress();
+        document.getElementById("adminWalletAddress").innerText = adminWallet;
+        showAdminBalance();
     }
-  }
-</script>
 
-</body>
-</html>
+    async function showAdminBalance() {
+        try {
+            const gbc = new ethers.Contract(contractAddress, contractABI, adminSigner);
+            const balance = await gbc.balanceOf(adminWallet);
+            const formatted = ethers.utils.formatUnits(balance, 18);
+            document.getElementById("adminBalance").innerText = formatted;
+        } catch (err) {
+            console.error(err);
+            document.getElementById("adminBalance").innerText = "Error";
+        }
+    }
+
+    async function sendApprovedGBC() {
+        const address = document.getElementById("requesterAddress").value;
+        const amount = document.getElementById("approvedAmount").value;
+
+        if (!address || !amount) {
+            alert("Enter requester address and amount.");
+            return;
+        }
+
+        const gbc = new ethers.Contract(contractAddress, contractABI, adminSigner);
+        try {
+            const tx = await gbc.transfer(address, ethers.utils.parseUnits(amount, 18));
+            document.getElementById("approvalStatus").innerText = "Sending GBC... Transaction Pending";
+            await tx.wait();
+            document.getElementById("approvalStatus").innerText = "Transaction Successful! GBC Sent.";
+            showAdminBalance();
+        } catch (error) {
+            console.error(error);
+            document.getElementById("approvalStatus").innerText = "Error sending GBC. Check gas settings.";
+        }
+    }
+</script>
