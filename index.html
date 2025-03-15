@@ -4,6 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SHIBLI GBC Wallet</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f9ff; margin: 0; padding: 0; color: #2b4f81; }
@@ -22,8 +23,7 @@
 
 <div class="section">
   <h2><i class="fas fa-leaf icon"></i> Welcome to SHIBLI GBC</h2>
-  <p><strong>The First Noble Global Birthright Currency</strong><br/>Initiative by Professor Murad Al Shibli.</strong><br/>
-  Empowering every human with dignity and a stable income — regardless of background, age, income, or location.</p>
+  <p><strong>The First Noble Global Birthright Currency</strong><br/>Initiative by Professor Murad Al Shibli.</p>
   <p><i class="fas fa-hand-holding-heart icon"></i> Dignity-based universal income<br/>
   <i class="fas fa-globe-africa icon"></i> Equal global entitlement<br/>
   <i class="fas fa-users icon"></i> Empowerment for every human being</p>
@@ -40,7 +40,7 @@
 
 <div class="section">
   <h2><i class="fas fa-gift icon"></i> Your Birthright Share</h2>
-  <p><strong>100 GBC ≈ $10,131 USD</strong><br/>This is your global dignity cap entitlement</p>
+  <p><strong>0.0125 GBC ≈ $10,131 USD</strong><br/>This is your global dignity cap entitlement</p>
 </div>
 
 <div class="section">
@@ -49,18 +49,14 @@
     <input type="hidden" name="_subject" value="New GBC Request Submitted">
     <input type="hidden" name="_captcha" value="false">
     <input type="hidden" name="_template" value="box">
-
     <input type="text" name="Full Name" placeholder="Full Name" required />
     <input type="text" name="National ID / Passport No" placeholder="National ID or Passport No." required />
     <input type="text" name="MetaMask Wallet Address" placeholder="Your MetaMask Wallet Address" required />
-    <input type="number" name="Requested Amount (Max 100)" step="1" max="100" placeholder="Enter amount (Max: 100)" required />
-    
+    <input type="number" name="Requested Amount (Max 0.0125)" step="0.0001" max="0.0125" placeholder="Enter amount (Max: 0.0125)" required />
     <label>Upload ID Document:</label><br/>
     <input type="file" name="ID Document" accept=".jpg,.jpeg,.png,.pdf" required /><br/>
-    
     <label>Upload Face Photo:</label><br/>
     <input type="file" name="Face Photo" accept="image/*" required /><br/><br/>
-    
     <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
   </form>
 </div>
@@ -79,6 +75,55 @@
     </li>
   </ol>
 </div>
+
+<!-- NEW ADMIN APPROVAL SECTION -->
+<div class="section">
+  <h2><i class="fas fa-user-shield icon"></i> Admin: Approve GBC Request</h2>
+  <p><strong>Send GBC directly to the requester’s wallet (after verifying submission from your email).</strong></p>
+  <input type="text" id="approveWallet" placeholder="Recipient MetaMask Wallet Address (paste from email)" />
+  <input type="number" id="approveAmount" placeholder="Amount to Transfer (Max 0.0125)" step="0.0001" max="0.0125" />
+  <button onclick="sendGBCAdmin()">Send Approved GBC</button>
+  <p id="approvalStatus" style="margin-top:10px; font-style:italic;"></p>
+</div>
+
+<script>
+  let provider, signer, contract;
+  const contractAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93";
+  const contractABI = [ 
+    {"inputs":[{"internalType":"uint256","name":"initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},
+    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+  ];
+
+  async function connectAdminWallet() {
+    if (!window.ethereum) return alert("Please install MetaMask!");
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+  }
+
+  async function sendGBCAdmin() {
+    await connectAdminWallet();
+    const recipient = document.getElementById("approveWallet").value;
+    const amount = document.getElementById("approveAmount").value;
+    if (!recipient || !amount) return alert("Please enter wallet and amount.");
+    try {
+      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+      document.getElementById("approvalStatus").innerText = "Transaction sent. Waiting for confirmation...";
+      await tx.wait();
+      document.getElementById("approvalStatus").innerText = "GBC sent successfully!";
+    } catch (err) {
+      console.error(err);
+      document.getElementById("approvalStatus").innerText = "Transaction failed: " + err.message;
+    }
+  }
+</script>
 
 </body>
 </html>
