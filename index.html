@@ -91,8 +91,8 @@
 
 <!-- SCRIPTS -->
 <script>
-const contractAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93";
-const contractABI = [ {
+  const contractAddress = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD";
+  const contractABI = [{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -326,56 +326,64 @@ const contractABI = [ {
 		"type": "function"
 	}
     ];
- ];
 
+];
+
+  let provider, signer, walletAddress;
+
+  async function connectAdminWallet() {
+    if (!window.ethereum) {
+      alert("Please install MetaMask");
+      return;
+    }
+
+    try {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      walletAddress = await signer.getAddress();
+      document.getElementById("adminWalletAddress").innerText = walletAddress;
+
+      const contract = new ethers.Contract(contractAddress, contractABI, signer);
+      const balance = await contract.balanceOf(walletAddress);
+      const formattedBalance = ethers.utils.formatUnits(balance, 18);
+      document.getElementById("adminBalance").innerText = formattedBalance;
+    } catch (error) {
+      console.error(error);
+      alert("Connection error: " + error.message);
+    }
+  }
+
+  async function sendApprovedGBC() {
+    const recipient = document.getElementById("requesterAddress").value;
+    const amount = document.getElementById("approvedAmount").value;
+
+    if (!recipient || !amount) {
+      alert("Please enter recipient address and amount");
+      return;
+    }
+
+    try {
+      const contract = new ethers.Contract(contractAddress, contractABI, signer);
+      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+      document.getElementById("approvalStatus").innerText = "Transaction sent. Waiting for confirmation...";
+      await tx.wait();
+      document.getElementById("approvalStatus").innerText = "GBC Sent Successfully!";
+    } catch (err) {
+      console.error(err);
+      document.getElementById("approvalStatus").innerText = "Transaction Failed: " + err.message;
+    }
+  }
+
+  // Attach handlers AFTER DOM is fully loaded
+  document.addEventListener("DOMContentLoaded", () => {
+    const connectBtn = document.querySelector("button[onclick='connectAdminWallet()']");
+    if (connectBtn) connectBtn.addEventListener("click", connectAdminWallet);
+
+    const sendBtn = document.querySelector("button[onclick='sendApprovedGBC()']");
+    if (sendBtn) sendBtn.addEventListener("click", sendApprovedGBC);
+  });
 	
-let adminProvider, adminSigner, adminWallet;
-
-async function connectAdminWallet() {
-  if (!window.ethereum) {
-    alert("Install MetaMask first.");
-    return;
-  }
-  adminProvider = new ethers.providers.Web3Provider(window.ethereum);
-  await adminProvider.send("eth_requestAccounts", []);
-  adminSigner = adminProvider.getSigner();
-  adminWallet = await adminSigner.getAddress();
-  document.getElementById("adminWalletAddress").innerText = adminWallet;
-  showAdminBalance();
-}
-
-async function showAdminBalance() {
-  try {
-    const contract = new ethers.Contract(contractAddress, contractABI, adminSigner);
-    const balance = await contract.balanceOf(adminWallet);
-    const formatted = ethers.utils.formatUnits(balance, 18);
-    document.getElementById("adminBalance").innerText = formatted;
-  } catch (e) {
-    console.error(e);
-    document.getElementById("adminBalance").innerText = "Error";
-  }
-}
-
-async function sendApprovedGBC() {
-  const address = document.getElementById("requesterAddress").value;
-  const amount = document.getElementById("approvedAmount").value;
-  if (!address || !amount) {
-    alert("Please complete all fields");
-    return;
-  }
-
-  try {
-    const contract = new ethers.Contract(contractAddress, contractABI, adminSigner);
-    const tx = await contract.transfer(address, ethers.utils.parseUnits(amount, 18));
-    document.getElementById("approvalStatus").innerText = "Transaction Pending...";
-    await tx.wait();
-    document.getElementById("approvalStatus").innerText = "GBC Sent Successfully!";
-    showAdminBalance();
-  } catch (err) {
-    console.error(err);
-    document.getElementById("approvalStatus").innerText = "Error sending GBC. Check gas.";
-  }
-}
 </script>
 
 </body>
