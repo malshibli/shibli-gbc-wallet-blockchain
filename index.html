@@ -132,6 +132,372 @@
 
 </div>
 
-</body>
+<!-- Deployer Wallet Summary Section -->
+<div style="background:#fef9e7; padding: 20px; margin: 30px auto; max-width: 800px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+  <h2 style="color: #2b4f81;">Deployer Wallet (Administrator)</h2>
+  <p>This wallet holds the total GBC supply and distributes funds to verified users globally.</p>
+  <p><strong>Contract Address:</strong> 0x8357E2760CBd9867399b448DD11ab3458CaEcf93</p>
+  <p>Distribution is managed through transparent review of requests and identity verification.</p>
+</div>
+	
+<div class="container">
+    <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
+    <button onclick="connectWallet()">Connect MetaMask</button>
 
+    <p class="balance">Wallet Balance: <strong><span id="balance">0</span> GBC</strong></p>
+
+    <h3>Send GBC</h3>
+    <input type="text" id="sendAddress" placeholder="Recipient Wallet Address">
+    <input type="text" id="sendAmount" placeholder="Amount">
+    <button onclick="sendGBC()">Send GBC</button>
+
+    <p id="transactionStatus"></p>
+</div>
+	
+<script>
+    let provider, signer, walletAddress;
+    const contractAddress = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // Replace with actual contract
+    const contractABI = [
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "initialSupply",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Approval",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "Transfer",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "allowance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "spender",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "approve",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "balanceOf",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "decimals",
+		"outputs": [
+			{
+				"internalType": "uint8",
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "name",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "symbol",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalSupply",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transfer",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "value",
+				"type": "uint256"
+			}
+		],
+		"name": "transferFrom",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "success",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+    ];
+
+
+window.connectWallet = async function () {
+    if (!window.ethereum) {
+        alert("Please install MetaMask!");
+        return;
+    }
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    walletAddress = await signer.getAddress();
+    document.getElementById("walletAddress").innerText = walletAddress;
+    getBalance();
+};
+
+async function getBalance() {
+    if (!signer) return;
+    try {
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const balance = await contract.balanceOf(walletAddress);
+        const formatted = ethers.utils.formatUnits(balance, 18);
+        document.getElementById("balance").innerText = formatted;
+    } catch (err) {
+        console.error("Error reading balance:", err);
+        document.getElementById("balance").innerText = "Error";
+    }
+}
+
+window.sendGBC = async function () {
+    const recipient = document.getElementById("sendAddress").value;
+    const amount = document.getElementById("sendAmount").value;
+    if (!recipient || !amount) {
+        alert("Enter recipient and amount");
+        return;
+    }
+    const contract = new ethers.Contract(contractAddress, contractABI, signer);
+    const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+    document.getElementById("transactionStatus").innerText = "Transaction Pending...";
+    await tx.wait();
+    document.getElementById("transactionStatus").innerText = "Transaction Successful!";
+    getBalance();
+};
+
+// Request Cap Validation
+function validateRequestAmount() {
+    const amount = parseFloat(document.getElementById("requestedAmount").value);
+    const capLimit = 0.0125;
+    if (amount > capLimit) {
+        alert("Maximum allowed per request is 0.0125 GBC.");
+        return false;
+    }
+
+    const fullName = document.getElementById("fullName").value;
+    const nationalID = document.getElementById("nationalID").value;
+
+    if (!fullName || !nationalID) {
+        alert("Please enter all required information.");
+        return false;
+    }
+
+    const idFile = document.getElementById("uploadID").files[0];
+    const faceFile = document.getElementById("uploadFace").files[0];
+    if (!idFile || !faceFile) {
+        alert("Please upload both ID and Face photo.");
+        return false;
+    }
+
+    // You can integrate with FormSubmit or backend later
+    document.getElementById("requestMessage").innerText = "Request submitted successfully (Demo Only). You’ll be contacted after admin verification.";
+
+    return false; // Prevent form submit for now (demo phase)
+}
+
+// GBC Request Validation Script
+function validateRequestAmount() {
+    const amount = parseFloat(document.getElementById("requestedAmount").value);
+    const capLimit = 0.0125;
+    if (amount > capLimit) {
+        alert("Maximum allowed per request is 0.0125 GBC.");
+        return false;
+    }
+
+    const fullName = document.getElementById("fullName").value;
+    const nationalID = document.getElementById("nationalID").value;
+    const idFile = document.getElementById("uploadID").files[0];
+    const faceFile = document.getElementById("uploadFace").files[0];
+
+    if (!fullName || !nationalID || !idFile || !faceFile) {
+        alert("Please complete all fields and upload both files.");
+        return false;
+    }
+
+    document.getElementById("requestMessage").innerText = "Request submitted successfully (Demo Only).";
+    return false;
+}
+
+function enforceMaxValue(input) {
+    const max = 0.0125;
+    if (parseFloat(input.value) > max) {
+        input.value = max;
+    }
+}
+	
+</script>
+	
+	
+</body>
 </html>
+
