@@ -116,22 +116,7 @@
   <p id="transactionStatus" style="margin-top: 10px;"></p>
 </div>
 
-<!-- Admin Approval Section -->
-<div class="container" style="background: #eef8ff; margin-top: 40px;">
-  <h2 style="color: #2b4f81;"><i class="fas fa-user-shield"></i> Admin: Approve GBC Request</h2>
-  
-  <p><strong>Connected Wallet:</strong> <span id="adminWallet">Not Connected</span></p>
-  <button onclick="connectAdminWallet()" style="background-color:#1c5e9e;"><i class="fas fa-link"></i> Connect MetaMask</button>
-  
-  <p><strong>Wallet Balance:</strong> <span id="adminBalance">0</span> GBC</p>
 
-  <input type="text" id="requesterAddress" placeholder="Requester MetaMask Wallet Address" />
-  <input type="number" id="approvedAmount" placeholder="GBC to Send (Max: 0.0125)" step="0.0001" max="0.0125" />
-
-  <button onclick="sendApprovedGBC()" style="background-color: #2a9d8f;"><i class="fas fa-paper-plane"></i> Send Approved GBC</button>
-  <p id="adminSendStatus" style="color: green; font-weight: bold; margin-top:10px;"></p>
-</div>
-	
 <!-- Adding P2P Sell Option -->
 <div class="section">
   <h2><i class="fas fa-dollar-sign icon"></i> Sell Your GBC (P2P Offer)</h2>
@@ -568,101 +553,7 @@ function checkOffers() {
 }
 </script>
 
-	// Admin Wallet Connect
-
-async function connectAdminWallet() {
-
-  if (!window.ethereum) {
-
-    alert("MetaMask not installed");
-
-    return;
-
-  }
-
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-
-  await provider.send("eth_requestAccounts", []);
-
-  signer = provider.getSigner();
-
-  const adminAddress = await signer.getAddress();
-
-  document.getElementById("adminWallet").innerText = adminAddress;
-
-  loadAdminBalance();
-
-}
-
-
-
-// Load Admin Wallet Balance
-
-async function loadAdminBalance() {
-
-  if (!signer) return;
-
-  try {
-
-    const contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-    const adminBalance = await contract.balanceOf(await signer.getAddress());
-
-    const formatted = ethers.utils.formatUnits(adminBalance, 18);
-
-    document.getElementById("adminBalance").innerText = formatted;
-
-  } catch (err) {
-
-    console.error("Error fetching admin balance", err);
-
-  }
-
-}
-
-
-
-// Admin Sends Approved GBC to Requester
-
-async function sendApprovedGBC() {
-
-  const recipient = document.getElementById("requesterAddress").value;
-
-  const amount = document.getElementById("approvedAmount").value;
-
-  if (!recipient || !amount || parseFloat(amount) > 0.0125) {
-
-    alert("Please enter a valid address and amount (Max 0.0125)");
-
-    return;
-
-  }
-
-
-
-  try {
-
-    const contract = new ethers.Contract(contractAddress, contractABI, signer);
-
-    const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
-
-    document.getElementById("adminSendStatus").innerText = "Transaction Pending...";
-
-    await tx.wait();
-
-    document.getElementById("adminSendStatus").innerText = "Approved GBC Sent Successfully!";
-
-    loadAdminBalance();
-
-  } catch (error) {
-
-    console.error("Approval Transaction Failed:", error);
-
-    document.getElementById("adminSendStatus").innerText = "Error sending GBC. See console.";
-
-  }
-
-}
+	
 	
 </body>
 </html>
