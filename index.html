@@ -378,22 +378,23 @@
 	}
     ];
 
-<script>
-  const deployerAddress = "0x1234567890abcdef1234567890abcdef12345678".toLowerCase(); // Replace with your real deployer wallet address
-</script>
 
-  async function connectWallet() {
+  const deployerAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93".toLowerCase(); // Replace with your real deployer wallet address
+
+
+async function connectWallet() {
     if (!window.ethereum) {
       alert("Please install MetaMask!");
       return;
     }
+
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     walletAddress = await signer.getAddress();
     document.getElementById("walletAddress").innerText = walletAddress;
 
-    // Show Admin Panel if current wallet is deployer
+    // Show admin panel only for deployer wallet
     if (walletAddress.toLowerCase() === deployerAddress) {
       document.getElementById("adminPanel").style.display = "block";
     } else {
