@@ -103,9 +103,10 @@
   </ol>
 </div>
 
-<div class="section" id="adminPanel" style="display:none;">
+<div class="section">
   <h2><i class="fas fa-shield-alt icon"></i> Admin Panel</h2>
   <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
+  <button onclick="connectWallet()"><i class="fas fa-link"></i> Connect MetaMask</button>
   <p class="balance">Wallet Balance: <span id="balance">0</span> GBC</p>
 
   <h3><i class="fas fa-paper-plane icon"></i> Send Approved GBC</h3>
@@ -377,31 +378,18 @@
     ];
 
 
-  const deployerAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93".toLowerCase(); // Replace with your real deployer wallet address
-
-
-async function connectWallet() {
+window.connectWallet = async function () {
     if (!window.ethereum) {
-      alert("Please install MetaMask!");
-      return;
+        alert("Please install MetaMask!");
+        return;
     }
-
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     walletAddress = await signer.getAddress();
     document.getElementById("walletAddress").innerText = walletAddress;
-
-    // Show admin panel only for deployer wallet
-    if (walletAddress.toLowerCase() === deployerAddress) {
-      document.getElementById("adminPanel").style.display = "block";
-    } else {
-      document.getElementById("adminPanel").style.display = "none";
-    }
-
     getBalance();
-  }
-
+};
 
 async function getBalance() {
     if (!signer) return;
@@ -416,21 +404,6 @@ async function getBalance() {
     }
 }
 
-<!-- Auto Wallet Detection + Account Change Listener -->
-<script>
-window.addEventListener('load', async () => {
-  if (typeof window.ethereum !== 'undefined') {
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    const accounts = await provider.listAccounts();
-    if (accounts.length > 0) {
-      signer = provider.getSigner();
-      walletAddress = await signer.getAddress();
-      document.getElementById("walletAddress").innerText = walletAddress;
-      getBalance();
-    }
-  }
-});
-	
 window.sendGBC = async function () {
     const recipient = document.getElementById("sendAddress").value;
     const amount = document.getElementById("sendAmount").value;
@@ -578,39 +551,6 @@ function checkOffers() {
     resultBox.innerHTML = html;
   }
 }
-
-<script>
-// Set your Deployer Admin Wallet Address (Hide from other users)
-const deployerAddress = "0x8357E2760CBd9867399b448DD11ab3458CaEcf93"; // Replace with real deployer wallet
-
-// Show/Hide Admin Panel Based on Wallet Address
-async function checkIfAdmin() {
-  if (!walletAddress) return;
-  const normalized = walletAddress.toLowerCase();
-  if (normalized === deployerAddress.toLowerCase()) {
-    document.getElementById("adminPanel").style.display = "block";
-  } else {
-    document.getElementById("adminPanel").style.display = "none";
-  }
-}
-
-// Also call this after connecting wallet
-window.connectWallet = async function () {
-  if (!window.ethereum) {
-    alert("Please install MetaMask!");
-    return;
-  }
-  provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send("eth_requestAccounts", []);
-  signer = provider.getSigner();
-  walletAddress = await signer.getAddress();
-  document.getElementById("walletAddress").innerText = walletAddress;
-  getBalance();
-  checkIfAdmin(); // <-- CALL THIS HERE
-}
-</script>
-	
-	
 </script>
 
 </body>
