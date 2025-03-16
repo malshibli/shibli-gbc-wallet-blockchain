@@ -73,8 +73,13 @@
     <input type="file" name="Face Photo" accept="image/*" required /><br/><br/>
 
     <!-- Add inside your existing <form> block, right after the face photo input -->
-<label><input type="checkbox" id="claimingMinor" onchange="toggleMinorFields()"> Claiming on behalf of a minor</label><br><br>
-
+<div style="text-align: left; margin-top: 10px;">
+  <label style="display: flex; align-items: center;">
+    <input type="checkbox" id="claimingMinor" onchange="toggleMinorFields()" style="margin-right: 8px;">
+    Claiming on behalf of a minor
+  </label>
+</div>	  
+	  
 <div id="minorSection" style="display: none;">
   <input type="text" name="Child Full Name" placeholder="Child's Full Name" /><br>
   <label>Date of Birth (Child):</label><br>
