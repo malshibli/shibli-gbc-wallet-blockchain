@@ -116,13 +116,11 @@
   <p id="transactionStatus" style="margin-top: 10px;"></p>
 </div>
 
-<!-- P2P GBC Sell Offers List Section -->
+<!-- GBC Sell Offers Marketplace -->
 <div class="section" style="background:#fff4ec; margin-top:40px;">
   <h2><i class="fas fa-store icon"></i> GBC Sell Offers Marketplace</h2>
-  <p>Browse available GBC offers and click <strong>Buy</strong> to purchase. Max allowed purchase: <strong>0.01125 GBC</strong> (90% of 0.0125 cap)</p>
-  <div id="sellOffersList">
-    <!-- Offers will be dynamically inserted here -->
-  </div>
+  <p>Browse available GBC offers and click <strong>Buy</strong> to purchase. Max purchase allowed is <strong>0.01125 GBC</strong> (90% of cap).</p>
+  <div id="sellOffersList"></div>
 </div>
 
 <!-- Adding P2P Sell Option -->
@@ -562,13 +560,13 @@ function checkOffers() {
 </script>
 
 
-// Sample GBC Sell Offers (You can replace this with dynamic database fetch later)
+// ==== GBC Sell Offers Display ====
+
 const sellOffers = [
   { seller: "0x1234567890abcdef1234567890abcdef12345678", amount: 0.008, priceUSD: 6500 },
   { seller: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", amount: 0.011, priceUSD: 9000 }
 ];
 
-// Display Sell Offers
 function displaySellOffers() {
   const container = document.getElementById("sellOffersList");
   container.innerHTML = "";
@@ -585,7 +583,7 @@ function displaySellOffers() {
       <p><strong>Seller:</strong> ${offer.seller}</p>
       <p><strong>Amount:</strong> ${offer.amount} GBC</p>
       <p><strong>Price:</strong> ~$${offer.priceUSD} USD</p>
-      <button onclick="buyGBC('${offer.seller}', ${offer.amount})">
+      <button onclick="buyGBC('${offer.seller}', ${offer.amount})" style="background-color:#2b4f81;color:white;padding:10px;border:none;border-radius:5px;cursor:pointer;">
         <i class="fas fa-shopping-cart"></i> Buy GBC
       </button>
     `;
@@ -594,7 +592,6 @@ function displaySellOffers() {
   });
 }
 
-// Function to Buy GBC from seller (P2P Transfer Simulation)
 async function buyGBC(sellerAddress, amountGBC) {
   if (!signer) {
     alert("Please connect your wallet first.");
@@ -614,10 +611,9 @@ async function buyGBC(sellerAddress, amountGBC) {
   }
 }
 
-// Load Offers on Page Load
-window.onload = function () {
+window.addEventListener("load", function () {
   displaySellOffers();
-};
+});
 
 	
 </body>
