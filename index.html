@@ -116,6 +116,17 @@
   <p id="transactionStatus" style="margin-top: 10px;"></p>
 </div>
 
+<!-- Adding P2P Sell Option -->
+<div class="section">
+  <h2><i class="fas fa-dollar-sign icon"></i> Sell Your GBC</h2>
+  <p>Offer to sell your GBC directly to another user. This is a peer-to-peer manual mode (demo only).</p>
+  <input type="number" id="sellAmount" placeholder="Amount of GBC to Sell" step="0.0001" />
+  <input type="text" id="buyerAddress" placeholder="Buyer Wallet Address" />
+  <input type="text" id="sellPrice" placeholder="Price in USD (Optional)" />
+  <button onclick="sellGBC()">Send Sell Offer</button>
+  <p id="sellStatus" style="margin-top:10px;"></p>
+</div>
+	
 <script>
     let provider, signer, walletAddress;
     const contractAddress = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // Replace with actual contract
@@ -466,6 +477,21 @@ function enforceMaxValue(input) {
     const section = document.getElementById("minorSection");
     section.style.display = checkbox.checked ? "block" : "none";
   }
+</script>
+
+<!-- Adding Sell Option -->
+<script>
+function sellGBC() {
+  const amount = document.getElementById("sellAmount").value;
+  const buyer = document.getElementById("buyerAddress").value;
+  const price = document.getElementById("sellPrice").value;
+  if (!amount || !buyer) {
+    alert("Please fill in amount and buyer address.");
+    return;
+  }
+  // You can log/send the sale offer manually via email/API in demo mode
+  document.getElementById("sellStatus").innerText = `Sell Offer Sent: ${amount} GBC to ${buyer} (Suggested Price: $${price || "N/A"})`;
+}
 </script>
 	
 </body>
