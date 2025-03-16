@@ -65,39 +65,24 @@
     <input type="text" name="National ID / Passport No" placeholder="National ID or Passport No." required />
     <input type="text" name="MetaMask Wallet Address" placeholder="Your MetaMask Wallet Address" required />
     <input type="number" name="Requested Amount (Max 100)" step="1" max="100" placeholder="Enter amount (Max: 100)" required />
-    
+
     <label>Upload ID Document:</label><br/>
     <input type="file" name="ID Document" accept=".jpg,.jpeg,.png,.pdf" required /><br/>
-    
+
     <label>Upload Face Photo:</label><br/>
-    <input type="file" name="Face Photo" accept="image/*" required /><br/><br/>
+    <input type="file" name="Face Photo" accept="image/*" required /><br/>
 
-    <!-- Add inside your existing <form> block, right after the face photo input -->
+    <!-- Checkbox and Label in same line, left aligned -->
+    <div style="display: flex; align-items: center; margin-top: 15px; justify-content: flex-start;">
+      <input type="checkbox" name="Claiming for Minor" id="claimMinorCheckbox" style="margin-right: 10px;">
+      <label for="claimMinorCheckbox" style="margin: 0; font-size: 15px;">I am a parent/guardian/custodian claiming GBC on behalf of a child/minor</label>
+    </div>
 
-<!-- Add inside your existing <form> block, right after the face photo input -->
+    <input type="text" name="Child Full Name" placeholder="Child's Full Name">
+    <input type="date" name="Child Date of Birth" placeholder="Date of Birth (Child)">
+    <label>Upload Birth Certificate:</label><br/>
+    <input type="file" name="Birth Certificate" accept=".jpg,.jpeg,.png,.pdf"><br/><br/>
 
-<!-- Add inside your existing <form> block, right after the face photo input -->
-<label><input type="checkbox" id="claimingMinor" onchange="toggleMinorFields()"
-> I am a parent/guardian/custodian claiming GBC on behalf of a child/minor</label><br><br>
-	  
-  <div id="minorSection" style="display: none;">
-  <input type="text" name="Child Full Name" placeholder="Child's Full Name" /><br>
-  <label>Date of Birth (Child):</label><br>
-  <input type="date" name="Child Date of Birth" /><br>
-  <label>Upload Birth Certificate:</label><br>
-  <input type="file" name="Birth Certificate" accept=".jpg,.jpeg,.png,.pdf" /><br><br>
-</div>
-	  
-  
-<div id="minorSection" style="display: none;">
-  <input type="text" name="Child Full Name" placeholder="Child's Full Name" /><br>
-  <label>Date of Birth (Child):</label><br>
-  <input type="date" name="Child Date of Birth" /><br>
-  <label>Upload Birth Certificate:</label><br>
-  <input type="file" name="Birth Certificate" accept=".jpg,.jpeg,.png,.pdf" /><br><br>
-</div>
-
-	  
     <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
   </form>
 </div>
