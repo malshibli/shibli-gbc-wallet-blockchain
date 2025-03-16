@@ -126,6 +126,16 @@
   <button onclick="sellGBC()"><i class="fas fa-paper-plane"></i> Send Sell Offer</button>
   <p id="sellStatus" style="color: green; margin-top:10px;"></p>
 </div>
+
+<!-- Adding Buyer Section -->	
+<div class="section">
+  <h2><i class="fas fa-inbox icon"></i> Buyer Inbox (Sell Offers)</h2>
+  <p>Paste your wallet address to check if someone sent you an offer:</p>
+  <input type="text" id="buyerLookup" placeholder="Your Wallet Address">
+  <button onclick="checkOffers()">Check Sell Offers</button>
+  <div id="inboxResults" style="margin-top:10px;"></div>
+</div>
+
 	
 <script>
     let provider, signer, walletAddress;
@@ -505,6 +515,43 @@ function sellGBC() {
   document.getElementById("sellStatus").innerText = `Sell Offer Submitted: ${amount} GBC to ${buyer} (Suggested Price: $${price || "N/A"}) — Awaiting buyer response.`;
 }
 </script>
+
+	
+<!-- Adding Buyer Section -->
+<script>
+let sellOffers = [];
+
+function sellGBC() {
+  const amount = parseFloat(document.getElementById("sellAmount").value);
+  const buyer = document.getElementById("buyerAddress").value;
+  const price = document.getElementById("sellPrice").value;
+  if (!amount || !buyer) {
+    alert("All fields required");
+    return;
+  }
+  const offer = { amount, buyer, price: price || "N/A" };
+  sellOffers.push(offer);
+  document.getElementById("sellStatus").innerText = `Offer submitted to ${buyer}`;
+}
+
+function checkOffers() {
+  const buyerLookup = document.getElementById("buyerLookup").value.trim();
+  const resultBox = document.getElementById("inboxResults");
+  const results = sellOffers.filter(o => o.buyer === buyerLookup);
+
+  if (results.length === 0) {
+    resultBox.innerHTML = "<p>No offers found for this wallet.</p>";
+  } else {
+    let html = "<ul>";
+    results.forEach(o => {
+      html += `<li>${o.amount} GBC offered at $${o.price}</li>`;
+    });
+    html += "</ul>";
+    resultBox.innerHTML = html;
+  }
+}
+</script>
+
 	
 </body>
 </html>
