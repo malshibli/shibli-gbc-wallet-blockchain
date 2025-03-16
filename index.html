@@ -71,11 +71,24 @@
     
     <label>Upload Face Photo:</label><br/>
     <input type="file" name="Face Photo" accept="image/*" required /><br/><br/>
-    
+
+    <!-- Add inside your existing <form> block, right after the face photo input -->
+<label><input type="checkbox" id="claimingMinor" onchange="toggleMinorFields()"> Claiming on behalf of a minor</label><br><br>
+
+<div id="minorSection" style="display: none;">
+  <input type="text" name="Child Full Name" placeholder="Child's Full Name" /><br>
+  <label>Date of Birth (Child):</label><br>
+  <input type="date" name="Child Date of Birth" /><br>
+  <label>Upload Birth Certificate:</label><br>
+  <input type="file" name="Birth Certificate" accept=".jpg,.jpeg,.png,.pdf" /><br><br>
+</div>
+
+	  
     <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
   </form>
 </div>
 
+	
 <div class="section">
   <h2><i class="fas fa-route icon"></i> How to Setup MetaMask</h2>
   <ol>
@@ -446,6 +459,14 @@ function enforceMaxValue(input) {
 	
 </script>
 
-
+// Adding Minor Parent Validation Script
+<script>
+  function toggleMinorFields() {
+    const checkbox = document.getElementById("claimingMinor");
+    const section = document.getElementById("minorSection");
+    section.style.display = checkbox.checked ? "block" : "none";
+  }
+</script>
+	
 </body>
 </html>
