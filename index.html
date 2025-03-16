@@ -387,7 +387,7 @@ window.sendGBC = async function () {
 // Request Cap Validation
 function validateRequestAmount() {
     const amount = parseFloat(document.getElementById("requestedAmount").value);
-    const capLimit = 0.0125;
+    const capLimit = 100;
     if (amount > capLimit) {
         alert("Maximum allowed per request is 100 GBC.");
         return false;
