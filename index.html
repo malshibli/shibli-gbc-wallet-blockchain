@@ -389,7 +389,7 @@ function validateRequestAmount() {
     const amount = parseFloat(document.getElementById("requestedAmount").value);
     const capLimit = 0.0125;
     if (amount > capLimit) {
-        alert("Maximum allowed per request is 0.0125 GBC.");
+        alert("Maximum allowed per request is 100 GBC.");
         return false;
     }
 
@@ -417,9 +417,9 @@ function validateRequestAmount() {
 // GBC Request Validation Script
 function validateRequestAmount() {
     const amount = parseFloat(document.getElementById("requestedAmount").value);
-    const capLimit = 0.0125;
+    const capLimit = 100;
     if (amount > capLimit) {
-        alert("Maximum allowed per request is 0.0125 GBC.");
+        alert("Maximum allowed per request is 100 GBC.");
         return false;
     }
 
