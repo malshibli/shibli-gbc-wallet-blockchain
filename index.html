@@ -118,13 +118,13 @@
 
 <!-- Adding P2P Sell Option -->
 <div class="section">
-  <h2><i class="fas fa-dollar-sign icon"></i> Sell Your GBC</h2>
-  <p>Offer to sell your GBC directly to another user. This is a peer-to-peer manual mode (demo only).</p>
-  <input type="number" id="sellAmount" placeholder="Amount of GBC to Sell" step="0.0001" />
+  <h2><i class="fas fa-dollar-sign icon"></i> Sell Your GBC (P2P Offer)</h2>
+  <p>You can offer to sell up to <strong>0.01125 GBC</strong> (90% of 0.0125 GBC cap) directly to another user.</p>
+  <input type="number" id="sellAmount" placeholder="Amount of GBC to Sell (Max: 0.01125)" step="0.0001" max="0.01125" oninput="enforceSellLimit(this)" />
   <input type="text" id="buyerAddress" placeholder="Buyer Wallet Address" />
   <input type="text" id="sellPrice" placeholder="Price in USD (Optional)" />
-  <button onclick="sellGBC()">Send Sell Offer</button>
-  <p id="sellStatus" style="margin-top:10px;"></p>
+  <button onclick="sellGBC()"><i class="fas fa-paper-plane"></i> Send Sell Offer</button>
+  <p id="sellStatus" style="color: green; margin-top:10px;"></p>
 </div>
 	
 <script>
@@ -481,16 +481,28 @@ function enforceMaxValue(input) {
 
 <!-- Adding Sell Option -->
 <script>
+function enforceSellLimit(input) {
+  const maxSell = 0.01125;
+  if (parseFloat(input.value) > maxSell) {
+    input.value = maxSell;
+  }
+}
+
 function sellGBC() {
-  const amount = document.getElementById("sellAmount").value;
+  const amount = parseFloat(document.getElementById("sellAmount").value);
   const buyer = document.getElementById("buyerAddress").value;
   const price = document.getElementById("sellPrice").value;
-  if (!amount || !buyer) {
-    alert("Please fill in amount and buyer address.");
+  const maxCap = 0.01125;
+
+  if (!amount || amount > maxCap || amount <= 0) {
+    alert(`Please enter an amount between 0.0001 and ${maxCap} GBC.`);
     return;
   }
-  // You can log/send the sale offer manually via email/API in demo mode
-  document.getElementById("sellStatus").innerText = `Sell Offer Sent: ${amount} GBC to ${buyer} (Suggested Price: $${price || "N/A"})`;
+  if (!buyer) {
+    alert("Please enter the buyer wallet address.");
+    return;
+  }
+  document.getElementById("sellStatus").innerText = `Sell Offer Submitted: ${amount} GBC to ${buyer} (Suggested Price: $${price || "N/A"}) — Awaiting buyer response.`;
 }
 </script>
 	
