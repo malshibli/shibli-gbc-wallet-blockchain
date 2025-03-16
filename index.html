@@ -379,18 +379,28 @@
     ];
 
 
-window.connectWallet = async function () {
+<script>
+  async function connectWallet() {
     if (!window.ethereum) {
-        alert("Please install MetaMask!");
-        return;
+      alert("Please install MetaMask!");
+      return;
     }
     provider = new ethers.providers.Web3Provider(window.ethereum);
     await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
     walletAddress = await signer.getAddress();
     document.getElementById("walletAddress").innerText = walletAddress;
+
+    // Show Admin Panel if current wallet is deployer
+    if (walletAddress.toLowerCase() === deployerAddress) {
+      document.getElementById("adminPanel").style.display = "block";
+    } else {
+      document.getElementById("adminPanel").style.display = "none";
+    }
+
     getBalance();
-};
+  }
+</script>
 
 async function getBalance() {
     if (!signer) return;
