@@ -560,24 +560,7 @@ function checkOffers() {
 </script>
 
 
-// ==== GBC Sell Offers Display ====
 
-const sellOffers = [
-  { seller: "0x1234567890abcdef1234567890abcdef12345678", amount: 0.008, priceUSD: 6500 },
-  { seller: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd", amount: 0.011, priceUSD: 9000 }
-];
-
-function displaySellOffers() {
-  const container = document.getElementById("sellOffersList");
-  container.innerHTML = "";
-
-  sellOffers.forEach((offer, index) => {
-    const offerBox = document.createElement("div");
-    offerBox.style.border = "1px solid #ccc";
-    offerBox.style.borderRadius = "10px";
-    offerBox.style.padding = "15px";
-    offerBox.style.margin = "10px 0";
-    offerBox.style.background = "#ffffff";
 
     offerBox.innerHTML = `
       <p><strong>Seller:</strong> ${offer.seller}</p>
@@ -588,32 +571,7 @@ function displaySellOffers() {
       </button>
     `;
 
-    container.appendChild(offerBox);
-  });
-}
-
-async function buyGBC(sellerAddress, amountGBC) {
-  if (!signer) {
-    alert("Please connect your wallet first.");
-    return;
-  }
-
-  try {
-    const contract = new ethers.Contract(contractAddress, contractABI, signer);
-    const tx = await contract.transferFrom(sellerAddress, walletAddress, ethers.utils.parseUnits(amountGBC.toString(), 18));
-    document.getElementById("transactionStatus").innerText = "Transaction Pending...";
-    await tx.wait();
-    document.getElementById("transactionStatus").innerText = "GBC Purchase Successful!";
-    getBalance();
-  } catch (err) {
-    console.error("Buy transaction failed:", err);
-    document.getElementById("transactionStatus").innerText = "Transaction Failed!";
-  }
-}
-
-window.addEventListener("load", function () {
-  displaySellOffers();
-});
+    
 
 	
 </body>
