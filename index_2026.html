@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SHIBLI GBC Wallet</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+  <style>
+    :root{
+      --blue:#2b4f81;
+      --blue2:#1d3d66;
+      --bg:#f5faff;
+      --card:#ffffff;
+      --soft:#eef6ff;
+      --ok:#1a7e4e;
+      --warn:#b45309;
+      --bad:#b91c1c;
+    }
+    body{ font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background:var(--bg); color:var(--blue); margin:0; }
+    header{ background:var(--blue); color:#fff; padding:18px 14px; text-align:center; font-size:20px; font-weight:700; }
+    .section{ max-width:900px; margin:18px auto; padding:18px; background:var(--card); border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.06); }
+    h2{ margin:0 0 10px 0; color:var(--blue); font-size:18px; }
+    .icon{ color:var(--blue); margin-right:8px; }
+    p{ margin:8px 0; line-height:1.45; }
+    ul,ol{ text-align:left; padding-left:20px; margin:8px 0; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .col{ flex:1; min-width:260px; }
+    input, button{
+      width:100%;
+      padding:11px 12px;
+      margin:7px 0;
+      border-radius:10px;
+      border:1px solid #cdd7e3;
+      font-size:15px;
+      box-sizing:border-box;
+    }
+    button{
+      background:var(--blue);
+      color:#fff;
+      border:none;
+      cursor:pointer;
+      transition:.2s;
+      font-weight:700;
+    }
+    button:hover{ background:var(--blue2); }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background:var(--soft); color:var(--blue); font-size:13px; font-weight:600;
+    }
+    .status{ font-weight:700; }
+    .status.ok{ color:var(--ok); }
+    .status.warn{ color:var(--warn); }
+    .status.bad{ color:var(--bad); }
+    .small{ font-size:13px; color:#3b5b87; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px; }
+    .notice{
+      border:1px dashed #b7c7dd;
+      background:#fbfdff;
+      padding:12px;
+      border-radius:12px;
+      margin-top:10px;
+    }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btnRow button{ flex:1; min-width:220px; }
+    .linkBtn{
+      background:#0f172a;  /* dark */
+    }
+    .linkBtn:hover{ background:#111c33; }
+  </style>
+</head>
+
+<body>
+  <header><i class="fas fa-globe"></i> SHIBLI GBC Wallet</header>
+
+  <div class="section">
+    <h2><i class="fas fa-leaf icon"></i>Welcome to SHIBLI GBC</h2>
+    <p><strong>The First Noble Global Birthright Currency</strong><br />Initiated by Professor Murad Al Shibli.</p>
+    <p>
+      <i class="fas fa-hand-holding-heart icon"></i>Dignity-based universal income<br />
+      <i class="fas fa-globe icon"></i>Equal global entitlement<br />
+      <i class="fas fa-users icon"></i>Empowerment for all humanity
+    </p>
+
+    <div class="notice" id="web3Notice" style="display:none;">
+      <div class="pill"><i class="fa-solid fa-triangle-exclamation"></i> MetaMask / Web3 not detected</div>
+      <p class="small" style="margin-top:10px;">
+        On <b>Android</b>, MetaMask works best inside the <b>MetaMask in-app Browser</b>.
+      </p>
+      <div class="btnRow">
+        <button class="linkBtn" onclick="copyLink()">📋 Copy this page link</button>
+        <button onclick="openInMetaMask()">🦊 Open in MetaMask Browser</button>
+      </div>
+      <p class="small" style="margin-top:10px;">
+        Steps: Open MetaMask → <b>Browser</b> tab → paste the link → open → then click <b>Connect MetaMask</b>.
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-bullseye icon"></i>SHIBLI GBC Goals</h2>
+    <ul>
+      <li><i class="fas fa-balance-scale icon"></i>Equality Beyond Borders</li>
+      <li><i class="fas fa-handshake icon"></i>Universal Financial Access</li>
+      <li><i class="fas fa-leaf icon"></i>Sustainable Economic Participation</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-gift icon"></i>Your Birthright Share</h2>
+    <p><strong>100 GBC ≈ $10,131 USD</strong><br/>This is your global dignity cap entitlement</p>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-user-check icon"></i>Request GBC</h2>
+    <form action="https://formsubmit.co/imurad2009@gmail.com" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" value="New GBC Request Submitted" />
+      <input type="hidden" name="_captcha" value="false" />
+      <input type="hidden" name="_template" value="box" />
+
+      <div class="row">
+        <div class="col">
+          <input type="text" name="Full Name" placeholder="Full Name" required />
+          <input type="text" name="National ID / Passport No" placeholder="National ID or Passport No." required />
+          <input type="text" name="MetaMask Wallet Address" placeholder="Your MetaMask Wallet Address" required />
+          <input type="number" name="Requested Amount (Max 100)" step="1" max="100" placeholder="Enter amount (Max: 100)" required />
+        </div>
+        <div class="col">
+          <label class="small">Upload ID Document:</label>
+          <input type="file" name="ID Document" accept=".jpg,.jpeg,.png,.pdf" required />
+          <label class="small">Upload Face Photo:</label>
+          <input type="file" name="Face Photo" accept="image/*" required />
+
+          <label class="small" style="display:block; margin-top:6px;">
+            <input type="checkbox" id="claimingMinor" onchange="toggleMinorFields()" />
+            I am claiming on behalf of a child/minor
+          </label>
+
+          <div id="minorSection" style="display:none;">
+            <input type="text" name="Child Full Name" placeholder="Child's Full Name" />
+            <label class="small">Date of Birth (Child):</label>
+            <input type="date" name="Child Date of Birth" />
+            <label class="small">Upload Birth Certificate:</label>
+            <input type="file" name="Birth Certificate" accept=".jpg,.jpeg,.png,.pdf" />
+          </div>
+        </div>
+      </div>
+
+      <button type="submit"><i class="fas fa-paper-plane"></i> Submit Request</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-route icon"></i>How to Setup MetaMask</h2>
+    <ol>
+      <li>Install MetaMask: <span class="mono">metamask.io</span></li>
+      <li>Create Wallet → Save secret recovery phrase</li>
+      <li>Enable Sepolia test network in MetaMask</li>
+      <li>Import your GBC token using the contract address below (after we confirm it)</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-shield-alt icon"></i>Admin Panel (Sepolia)</h2>
+
+    <div class="row" style="align-items:center;">
+      <div class="col">
+        <div class="pill"><i class="fa-solid fa-network-wired"></i> Network: <span id="netLabel" class="status warn">Not connected</span></div>
+      </div>
+      <div class="col">
+        <div class="pill"><i class="fa-solid fa-file-contract"></i> Contract: <span id="contractLabel" class="mono"></span></div>
+      </div>
+    </div>
+
+    <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
+
+    <div class="btnRow">
+      <button id="connectBtn" onclick="connectWallet()"><i class="fas fa-link"></i> Connect MetaMask</button>
+      <button id="switchBtn" onclick="switchToSepolia()" disabled>🧪 Switch to Sepolia</button>
+    </div>
+
+    <p class="balance">Wallet Balance: <span id="balance">0</span> <b>GBC</b></p>
+
+    <h3 style="margin:14px 0 6px 0;"><i class="fas fa-paper-plane icon"></i>Send Approved GBC</h3>
+    <div class="row">
+      <div class="col">
+        <input type="text" id="sendAddress" placeholder="Recipient Wallet Address" />
+      </div>
+      <div class="col">
+        <input type="number" id="sendAmount" placeholder="Amount to Send" />
+      </div>
+    </div>
+
+    <button id="sendBtn" onclick="sendGBC()" disabled><i class="fas fa-check-circle"></i> Send Approved GBC</button>
+    <p id="transactionStatus" style="margin-top:10px;"></p>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-dollar-sign icon"></i>Sell Your GBC (P2P Offer)</h2>
+    <p>You can offer to sell up to <strong>0.01125 GBC</strong> (90% of 0.0125 cap) to another user.</p>
+
+    <div class="row">
+      <div class="col">
+        <input type="number" id="sellAmount" placeholder="Amount of GBC to Sell (Max: 0.01125)" step="0.0001" max="0.01125" oninput="enforceSellLimit(this)" />
+      </div>
+      <div class="col">
+        <input type="text" id="buyerAddress" placeholder="Buyer Wallet Address" />
+      </div>
+    </div>
+
+    <input type="text" id="sellPrice" placeholder="Price in USD (Optional)" />
+    <button onclick="sellGBC()"><i class="fas fa-paper-plane"></i> Send Sell Offer</button>
+    <p id="sellStatus" style="color: var(--ok); margin-top:10px;"></p>
+  </div>
+
+  <div class="section">
+    <h2><i class="fas fa-inbox icon"></i>Buyer Inbox (Sell Offers)</h2>
+    <p>Paste your wallet address to check if someone sent you an offer:</p>
+    <input type="text" id="buyerLookup" placeholder="Your Wallet Address" />
+    <button onclick="checkOffers()">Check Sell Offers</button>
+    <div id="inboxResults" style="margin-top:10px;"></div>
+  </div>
+
+<script>
+  // =========================
+  // CONFIG (edit this)
+  // =========================
+  const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
+  const CONTRACT_ADDRESS = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // <-- replace if needed
+  const TOKEN_DECIMALS = 18;
+
+  const contractABI = [
+    {"inputs":[{"internalType":"uint256","name":"initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+  ];
+
+  // =========================
+  // STATE
+  // =========================
+  let provider, signer, walletAddress;
+
+  // UI refs
+  const web3Notice = document.getElementById("web3Notice");
+  const walletEl = document.getElementById("walletAddress");
+  const balEl = document.getElementById("balance");
+  const netLabel = document.getElementById("netLabel");
+  const contractLabel = document.getElementById("contractLabel");
+  const connectBtn = document.getElementById("connectBtn");
+  const switchBtn = document.getElementById("switchBtn");
+  const sendBtn = document.getElementById("sendBtn");
+  const txStatus = document.getElementById("transactionStatus");
+
+  contractLabel.textContent = CONTRACT_ADDRESS;
+
+  function shortAddr(a){
+    if (!a || a.length < 10) return a || "";
+    return a.slice(0,6) + "..." + a.slice(-4);
+  }
+
+  function setNetStatus(kind, text){
+    netLabel.className = "status " + kind;
+    netLabel.textContent = text;
+  }
+
+  function setTxStatus(kind, text){
+    txStatus.className = "status " + kind;
+    txStatus.textContent = text;
+  }
+
+  function isAndroid(){
+    return /Android/i.test(navigator.userAgent || "");
+  }
+
+  function hasWeb3(){
+    return typeof window.ethereum !== "undefined";
+  }
+
+  function showWeb3HelpIfNeeded(){
+    if (!hasWeb3()){
+      web3Notice.style.display = "block";
+      // Still allow copying/opening in MetaMask browser
+    }
+  }
+
+  // =========================
+  // Android MetaMask helpers
+  // =========================
+  window.copyLink = async function(){
+    const url = window.location.href;
+    try{
+      await navigator.clipboard.writeText(url);
+      alert("Link copied! Now open MetaMask → Browser → paste → open.");
+    }catch(e){
+      prompt("Copy this link:", url);
+    }
+  };
+
+  window.openInMetaMask = function(){
+    // MetaMask deep link format:
+    // https://metamask.app.link/dapp/<your-domain>
+    const clean = window.location.href.replace(/^https?:\/\//, "");
+    const deep = "https://metamask.app.link/dapp/" + clean;
+    window.location.href = deep;
+  };
+
+  // =========================
+  // Sepolia switching
+  // =========================
+  async function getChainIdHex(){
+    if (!hasWeb3()) return null;
+    try{
+      return await window.ethereum.request({ method: "eth_chainId" });
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function refreshNetworkUI(){
+    const cid = await getChainIdHex();
+    if (!cid){
+      setNetStatus("warn", "Not connected");
+      switchBtn.disabled = true;
+      return;
+    }
+    if (cid.toLowerCase() === SEPOLIA_CHAIN_ID_HEX){
+      setNetStatus("ok", "Sepolia");
+      switchBtn.disabled = true;
+    }else{
+      setNetStatus("bad", "Wrong network");
+      switchBtn.disabled = false;
+    }
+  }
+
+  window.switchToSepolia = async function(){
+    if (!hasWeb3()){
+      alert("MetaMask not detected. Open this site inside MetaMask Browser.");
+      return;
+    }
+    try{
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }]
+      });
+      await refreshNetworkUI();
+      await getBalance();
+      unlockSendIfReady();
+    }catch(err){
+      // If Sepolia isn't added (rare), attempt to add
+      if (err && err.code === 4902){
+        try{
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: SEPOLIA_CHAIN_ID_HEX,
+              chainName: "Sepolia",
+              nativeCurrency: { name: "SepoliaETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://rpc.sepolia.org"],
+              blockExplorerUrls: ["https://sepolia.etherscan.io"]
+            }]
+          });
+          await refreshNetworkUI();
+        }catch(e2){
+          alert("Could not add Sepolia network. Please add it manually in MetaMask.");
+        }
+      }else{
+        alert("Network switch cancelled or failed.");
+      }
+    }
+  };
+
+  function unlockSendIfReady(){
+    const ok = !!signer && !!walletAddress;
+    sendBtn.disabled = !ok;
+  }
+
+  // =========================
+  // Wallet connect + balance
+  // =========================
+  window.connectWallet = async function(){
+    showWeb3HelpIfNeeded();
+    if (!hasWeb3()){
+      alert("No Web3 detected. On Android, open this site inside MetaMask Browser.");
+      return;
+    }
+    try{
+      provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      walletAddress = await signer.getAddress();
+      walletEl.textContent = shortAddr(walletAddress);
+
+      // Listen for changes
+      window.ethereum.on?.("accountsChanged", async () => {
+        try{
+          walletAddress = await signer.getAddress();
+          walletEl.textContent = shortAddr(walletAddress);
+          await getBalance();
+          await refreshNetworkUI();
+          unlockSendIfReady();
+        }catch(e){}
+      });
+
+      window.ethereum.on?.("chainChanged", async () => {
+        await refreshNetworkUI();
+        await getBalance();
+      });
+
+      await refreshNetworkUI();
+
+      // Auto-ask switch if not Sepolia
+      const cid = await getChainIdHex();
+      if (cid && cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+        setTxStatus("warn", "Please switch to Sepolia to use this wallet.");
+        switchBtn.disabled = false;
+      }else{
+        setTxStatus("ok", "Connected. Ready.");
+      }
+
+      await getBalance();
+      unlockSendIfReady();
+    }catch(err){
+      console.error(err);
+      alert("Connection failed or cancelled.");
+    }
+  };
+
+  async function getBalance(){
+    if (!signer || !walletAddress){
+      balEl.textContent = "0";
+      return;
+    }
+    try{
+      const cid = await getChainIdHex();
+      if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+        balEl.textContent = "—";
+        return;
+      }
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+      const balance = await contract.balanceOf(walletAddress);
+      const formatted = ethers.utils.formatUnits(balance, TOKEN_DECIMALS);
+      balEl.textContent = formatted;
+    }catch(err){
+      console.error("Error reading balance:", err);
+      balEl.textContent = "Error";
+    }
+  }
+
+  // =========================
+  // Send tokens (admin)
+  // =========================
+  window.sendGBC = async function(){
+    if (!signer){
+      alert("Connect MetaMask first.");
+      return;
+    }
+    const cid = await getChainIdHex();
+    if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+      alert("Please switch to Sepolia first.");
+      return;
+    }
+
+    const recipient = document.getElementById("sendAddress").value.trim();
+    const amount = document.getElementById("sendAmount").value;
+
+    if (!ethers.utils.isAddress(recipient)){
+      alert("Recipient address is not valid.");
+      return;
+    }
+    if (!amount || Number(amount) <= 0){
+      alert("Enter a valid amount.");
+      return;
+    }
+
+    try{
+      setTxStatus("warn", "Transaction pending… please confirm in MetaMask.");
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+
+      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(String(amount), TOKEN_DECIMALS));
+      setTxStatus("warn", "Pending… waiting for confirmation on-chain.");
+      await tx.wait();
+
+      setTxStatus("ok", "Transaction successful ✅");
+      await getBalance();
+    }catch(err){
+      console.error(err);
+      setTxStatus("bad", "Transaction failed or cancelled.");
+    }
+  };
+
+  // =========================
+  // Minor fields + P2P inbox (demo)
+  // =========================
+  window.toggleMinorFields = function(){
+    const checkbox = document.getElementById("claimingMinor");
+    const section = document.getElementById("minorSection");
+    section.style.display = checkbox.checked ? "block" : "none";
+  };
+
+  window.enforceSellLimit = function(input){
+    const maxSell = 0.01125;
+    if (parseFloat(input.value) > maxSell) input.value = maxSell;
+  };
+
+  let sellOffers = [];
+
+  window.sellGBC = function(){
+    const amount = parseFloat(document.getElementById("sellAmount").value);
+    const buyer = document.getElementById("buyerAddress").value;
+    const price = document.getElementById("sellPrice").value;
+
+    if (!amount || amount <= 0 || amount > 0.01125) {
+      alert("Amount must be between 0.0001 and 0.01125 GBC.");
+      return;
+    }
+    if (!buyer || !buyer.trim()) {
+      alert("Please enter the buyer wallet address.");
+      return;
+    }
+
+    sellOffers.push({ amount, buyer: buyer.trim(), price: price || "N/A" });
+    document.getElementById("sellStatus").innerText = `Offer saved locally for ${buyer.trim()} (demo).`;
+  };
+
+  window.checkOffers = function(){
+    const buyerLookup = document.getElementById("buyerLookup").value.trim();
+    const resultBox = document.getElementById("inboxResults");
+    const results = sellOffers.filter(o => o.buyer === buyerLookup);
+
+    if (results.length === 0) {
+      resultBox.innerHTML = "<p>No offers found for this wallet.</p>";
+    } else {
+      let html = "<ul>";
+      results.forEach(o => { html += `<li>${o.amount} GBC offered at $${o.price}</li>`; });
+      html += "</ul>";
+      resultBox.innerHTML = html;
+    }
+  };
+
+  // On load
+  (function init(){
+    showWeb3HelpIfNeeded();
+    refreshNetworkUI();
+    unlockSendIfReady();
+  })();
+</script>
+
+</body>
+</html>
