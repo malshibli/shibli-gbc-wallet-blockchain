@@ -1,0 +1,9 @@
+{
+  "name": "shibli-gbc-wallet",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1",
+    "nanoid": "^5.0.7"
+  }
+}
