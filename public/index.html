@@ -51,6 +51,7 @@
       display:inline-flex; align-items:center; gap:8px;
       padding:8px 10px; border-radius:999px;
       background:var(--soft); color:var(--blue); font-size:13px; font-weight:600;
+      word-break:break-all;
     }
     .status{ font-weight:700; }
     .status.ok{ color:var(--ok); }
@@ -67,10 +68,13 @@
     }
     .btnRow{ display:flex; gap:10px; flex-wrap:wrap; }
     .btnRow button{ flex:1; min-width:220px; }
-    .linkBtn{
-      background:#0f172a;  /* dark */
-    }
+    .linkBtn{ background:#0f172a; }
     .linkBtn:hover{ background:#111c33; }
+
+    /* small helper layout blocks (added without changing your layout) */
+    .miniGrid{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .miniGrid .pill{ flex:1; min-width:240px; }
+    .divider{ border:none; border-top:1px solid #eef2f8; margin:14px 0; }
   </style>
 </head>
 
@@ -172,8 +176,20 @@
         <div class="pill"><i class="fa-solid fa-network-wired"></i> Network: <span id="netLabel" class="status warn">Not connected</span></div>
       </div>
       <div class="col">
-        <div class="pill"><i class="fa-solid fa-file-contract"></i> Contract: <span id="contractLabel" class="mono"></span></div>
+        <div class="pill">
+          <i class="fa-solid fa-file-contract"></i>
+          Contract:
+          <span id="contractLabel" class="mono"></span>
+        </div>
       </div>
+    </div>
+
+    <!-- ✅ Added: on-chain verified admin + token metadata (no layout changes, just extra pills) -->
+    <div class="miniGrid">
+      <div class="pill"><i class="fa-solid fa-id-card"></i> On-chain Admin: <span id="adminLabel" class="mono">—</span></div>
+      <div class="pill"><i class="fa-solid fa-lock"></i> Admin Access: <span id="adminAccess" class="status warn">Not connected</span></div>
+      <div class="pill"><i class="fa-solid fa-coins"></i> Token: <span id="tokenMeta" class="mono">—</span></div>
+      <div class="pill"><i class="fa-solid fa-gift"></i> Entitlement Cap: <span id="capLabel" class="mono">—</span></div>
     </div>
 
     <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
@@ -184,6 +200,14 @@
     </div>
 
     <p class="balance">Wallet Balance: <span id="balance">0</span> <b>GBC</b></p>
+
+    <!-- ✅ Safety notice -->
+    <div class="notice" id="adminSafetyNote" style="display:none;">
+      <div class="pill"><i class="fa-solid fa-shield-halved"></i> Safety Lock</div>
+      <p class="small" style="margin-top:10px;">
+        Sending is <b>locked</b> unless your connected wallet matches the <b>on-chain admin()</b> address of the contract.
+      </p>
+    </div>
 
     <h3 style="margin:14px 0 6px 0;"><i class="fas fa-paper-plane icon"></i>Send Approved GBC</h3>
     <div class="row">
@@ -197,6 +221,30 @@
 
     <button id="sendBtn" onclick="sendGBC()" disabled><i class="fas fa-check-circle"></i> Send Approved GBC</button>
     <p id="transactionStatus" style="margin-top:10px;"></p>
+
+    <!-- ✅ Optional: Admin approval/claim tools (kept minimal, safe-locked, does not affect your other sections) -->
+    <hr class="divider" />
+    <h3 style="margin:14px 0 6px 0;"><i class="fas fa-user-shield icon"></i>Admin Tools (On-chain)</h3>
+    <div class="row">
+      <div class="col">
+        <input type="text" id="approveUserAddr" placeholder="User wallet to approve (allow claim)" />
+      </div>
+      <div class="col">
+        <select id="approveUserBool" style="width:100%; padding:11px 12px; margin:7px 0; border-radius:10px; border:1px solid #cdd7e3; font-size:15px;">
+          <option value="true">Approve ✅</option>
+          <option value="false">Revoke ⛔</option>
+        </select>
+      </div>
+    </div>
+    <button id="approveBtn" onclick="setApprovedUser()" disabled><i class="fas fa-check-circle"></i> Set Approved (Admin Only)</button>
+
+    <hr class="divider" />
+    <h3 style="margin:14px 0 6px 0;"><i class="fas fa-gift icon"></i>My Entitlement (On-chain)</h3>
+    <div class="miniGrid">
+      <div class="pill"><i class="fa-solid fa-user-check"></i> Approved? <span id="meApproved" class="mono">—</span></div>
+      <div class="pill"><i class="fa-solid fa-flag-checkered"></i> Claimed? <span id="meClaimed" class="mono">—</span></div>
+    </div>
+    <button id="claimBtn" onclick="claimEntitlement()" disabled><i class="fas fa-gift"></i> Claim (If Approved)</button>
   </div>
 
   <div class="section">
@@ -226,32 +274,59 @@
   </div>
 
 <script>
+  // =========================================================
+  // ✅ REAL DEPLOYMENT + SAFETY ENHANCEMENTS (kept your UI intact)
+  // - Single source of truth: one deployed contract address
+  // - Reads admin() and entitlementCap() from chain
+  // - Shows admin panel actions ONLY if wallet == on-chain admin
+  // - Strong network guards (Sepolia)
+  // - Uses adminTransfer() for admin-controlled distribution (if present)
+  // - Graceful fallback if some functions aren't present
+  // =========================================================
+
   // =========================
   // CONFIG (edit this)
   // =========================
-  const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-  const CONTRACT_ADDRESS = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // <-- replace if needed
-  const TOKEN_DECIMALS = 18;
+  const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111 (Sepolia)
 
-  const contractABI = [
-    {"inputs":[{"internalType":"uint256","name":"initialSupply","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  // ✅ IMPORTANT:
+  // Your Solidity GBCEntitlement is BOTH the token and the entitlement logic.
+  // So this should be the deployed GBCEntitlement contract address on Sepolia.
+  const CONTRACT_ADDRESS = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // <-- replace with your real deployed address
+
+  // If your token has different decimals on-chain, we read it automatically.
+  const FALLBACK_DECIMALS = 18;
+
+  // =========================
+  // ABIs (minimal + safe)
+  // =========================
+  const ERC20_MIN_ABI = [
+    {"inputs":[{"internalType":"address","name":"a","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
     {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
     {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+    {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+  ];
+
+  // Entitlement/admin functions (from your Solidity)
+  const ENTITLEMENT_ABI = [
+    {"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"entitlementCap","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"user","type":"address"},{"internalType":"bool","name":"allowed","type":"bool"}],"name":"setApproved","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"approved","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"claim","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"adminTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
   ];
 
   // =========================
   // STATE
   // =========================
   let provider, signer, walletAddress;
+  let tokenDecimals = FALLBACK_DECIMALS;
+  let cachedAdmin = null;
+  let cachedCap = null;
+  let tokenMetaStr = "—";
 
   // UI refs
   const web3Notice = document.getElementById("web3Notice");
@@ -259,10 +334,19 @@
   const balEl = document.getElementById("balance");
   const netLabel = document.getElementById("netLabel");
   const contractLabel = document.getElementById("contractLabel");
-  const connectBtn = document.getElementById("connectBtn");
   const switchBtn = document.getElementById("switchBtn");
   const sendBtn = document.getElementById("sendBtn");
+  const approveBtn = document.getElementById("approveBtn");
+  const claimBtn = document.getElementById("claimBtn");
   const txStatus = document.getElementById("transactionStatus");
+
+  const adminLabel = document.getElementById("adminLabel");
+  const adminAccess = document.getElementById("adminAccess");
+  const capLabel = document.getElementById("capLabel");
+  const tokenMeta = document.getElementById("tokenMeta");
+  const adminSafetyNote = document.getElementById("adminSafetyNote");
+  const meApproved = document.getElementById("meApproved");
+  const meClaimed = document.getElementById("meClaimed");
 
   contractLabel.textContent = CONTRACT_ADDRESS;
 
@@ -281,10 +365,6 @@
     txStatus.textContent = text;
   }
 
-  function isAndroid(){
-    return /Android/i.test(navigator.userAgent || "");
-  }
-
   function hasWeb3(){
     return typeof window.ethereum !== "undefined";
   }
@@ -292,7 +372,6 @@
   function showWeb3HelpIfNeeded(){
     if (!hasWeb3()){
       web3Notice.style.display = "block";
-      // Still allow copying/opening in MetaMask browser
     }
   }
 
@@ -310,15 +389,13 @@
   };
 
   window.openInMetaMask = function(){
-    // MetaMask deep link format:
-    // https://metamask.app.link/dapp/<your-domain>
     const clean = window.location.href.replace(/^https?:\/\//, "");
     const deep = "https://metamask.app.link/dapp/" + clean;
     window.location.href = deep;
   };
 
   // =========================
-  // Sepolia switching
+  // Helpers: chain + contracts
   // =========================
   async function getChainIdHex(){
     if (!hasWeb3()) return null;
@@ -339,12 +416,100 @@
     if (cid.toLowerCase() === SEPOLIA_CHAIN_ID_HEX){
       setNetStatus("ok", "Sepolia");
       switchBtn.disabled = true;
-    }else{
+    } else {
       setNetStatus("bad", "Wrong network");
       switchBtn.disabled = false;
     }
   }
 
+  function getReadContract(){
+    if (!provider) throw new Error("Provider not ready");
+    return new ethers.Contract(CONTRACT_ADDRESS, [...ERC20_MIN_ABI, ...ENTITLEMENT_ABI], provider);
+  }
+
+  function getWriteContract(){
+    if (!signer) throw new Error("Connect MetaMask first");
+    return new ethers.Contract(CONTRACT_ADDRESS, [...ERC20_MIN_ABI, ...ENTITLEMENT_ABI], signer);
+  }
+
+  async function loadTokenMeta(){
+    // read name/symbol/decimals safely
+    try{
+      if (!provider) return;
+      const c = getReadContract();
+      const [nm, sym, dec] = await Promise.all([
+        c.name().catch(()=>null),
+        c.symbol().catch(()=>null),
+        c.decimals().catch(()=>null),
+      ]);
+      if (typeof dec === "number") tokenDecimals = dec;
+      else if (dec && dec.toNumber) tokenDecimals = dec.toNumber();
+      tokenMetaStr = `${nm || "Token"} (${sym || "—"}) • decimals ${tokenDecimals}`;
+      tokenMeta.textContent = tokenMetaStr;
+    }catch(_e){
+      tokenDecimals = FALLBACK_DECIMALS;
+      tokenMeta.textContent = "—";
+    }
+  }
+
+  async function loadAdminAndCap(){
+    try{
+      if (!provider) return;
+      const c = getReadContract();
+      cachedAdmin = await c.admin();
+      adminLabel.textContent = cachedAdmin ? shortAddr(cachedAdmin) : "—";
+
+      cachedCap = await c.entitlementCap().catch(()=>null);
+      if (cachedCap) capLabel.textContent = ethers.utils.formatUnits(cachedCap, tokenDecimals) + " GBC";
+      else capLabel.textContent = "—";
+    }catch(_e){
+      cachedAdmin = null;
+      cachedCap = null;
+      adminLabel.textContent = "—";
+      capLabel.textContent = "—";
+    }
+  }
+
+  function isAdminWallet(){
+    if (!walletAddress || !cachedAdmin) return false;
+    return walletAddress.toLowerCase() === cachedAdmin.toLowerCase();
+  }
+
+  function unlockActions(){
+    const connected = !!signer && !!walletAddress;
+    const onSepolia = (netLabel.textContent || "").toLowerCase().includes("sepolia");
+    const adminOk = isAdminWallet();
+
+    // Admin safety note shown if connected but not admin
+    if (connected && !adminOk) adminSafetyNote.style.display = "block";
+    else adminSafetyNote.style.display = "none";
+
+    // Send + approve are admin-only
+    sendBtn.disabled = !(connected && onSepolia && adminOk);
+    approveBtn.disabled = !(connected && onSepolia && adminOk);
+
+    // Claim is user action (requires Sepolia + connected)
+    claimBtn.disabled = !(connected && onSepolia);
+
+    // Access label
+    if (!connected) {
+      adminAccess.className = "status warn";
+      adminAccess.textContent = "Not connected";
+    } else if (!onSepolia) {
+      adminAccess.className = "status bad";
+      adminAccess.textContent = "Wrong network";
+    } else if (adminOk) {
+      adminAccess.className = "status ok";
+      adminAccess.textContent = "Admin ✅";
+    } else {
+      adminAccess.className = "status bad";
+      adminAccess.textContent = "Not admin ⛔";
+    }
+  }
+
+  // =========================
+  // Sepolia switching
+  // =========================
   window.switchToSepolia = async function(){
     if (!hasWeb3()){
       alert("MetaMask not detected. Open this site inside MetaMask Browser.");
@@ -357,9 +522,9 @@
       });
       await refreshNetworkUI();
       await getBalance();
-      unlockSendIfReady();
+      await refreshMyEntitlementStatus();
+      unlockActions();
     }catch(err){
-      // If Sepolia isn't added (rare), attempt to add
       if (err && err.code === 4902){
         try{
           await window.ethereum.request({
@@ -373,19 +538,15 @@
             }]
           });
           await refreshNetworkUI();
+          unlockActions();
         }catch(e2){
           alert("Could not add Sepolia network. Please add it manually in MetaMask.");
         }
-      }else{
+      } else {
         alert("Network switch cancelled or failed.");
       }
     }
   };
-
-  function unlockSendIfReady(){
-    const ok = !!signer && !!walletAddress;
-    sendBtn.disabled = !ok;
-  }
 
   // =========================
   // Wallet connect + balance
@@ -406,20 +567,18 @@
       // Listen for changes
       window.ethereum.on?.("accountsChanged", async () => {
         try{
+          signer = provider.getSigner();
           walletAddress = await signer.getAddress();
           walletEl.textContent = shortAddr(walletAddress);
-          await getBalance();
-          await refreshNetworkUI();
-          unlockSendIfReady();
+          await refreshAll();
         }catch(e){}
       });
 
       window.ethereum.on?.("chainChanged", async () => {
-        await refreshNetworkUI();
-        await getBalance();
+        await refreshAll();
       });
 
-      await refreshNetworkUI();
+      await refreshAll();
 
       // Auto-ask switch if not Sepolia
       const cid = await getChainIdHex();
@@ -429,9 +588,6 @@
       }else{
         setTxStatus("ok", "Connected. Ready.");
       }
-
-      await getBalance();
-      unlockSendIfReady();
     }catch(err){
       console.error(err);
       alert("Connection failed or cancelled.");
@@ -449,18 +605,52 @@
         balEl.textContent = "—";
         return;
       }
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
-      const balance = await contract.balanceOf(walletAddress);
-      const formatted = ethers.utils.formatUnits(balance, TOKEN_DECIMALS);
-      balEl.textContent = formatted;
+      const c = getWriteContract();
+      const balance = await c.balanceOf(walletAddress);
+      balEl.textContent = ethers.utils.formatUnits(balance, tokenDecimals);
     }catch(err){
       console.error("Error reading balance:", err);
       balEl.textContent = "Error";
     }
   }
 
+  async function refreshMyEntitlementStatus(){
+    if (!provider || !walletAddress){
+      meApproved.textContent = "—";
+      meClaimed.textContent = "—";
+      return;
+    }
+    try{
+      const cid = await getChainIdHex();
+      if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+        meApproved.textContent = "—";
+        meClaimed.textContent = "—";
+        return;
+      }
+      const c = getReadContract();
+      const [ap, cl] = await Promise.all([
+        c.approved(walletAddress).catch(()=>null),
+        c.hasClaimed(walletAddress).catch(()=>null)
+      ]);
+      meApproved.textContent = (ap === null) ? "N/A" : (ap ? "YES ✅" : "NO ⛔");
+      meClaimed.textContent = (cl === null) ? "N/A" : (cl ? "YES ✅" : "NO");
+    }catch(_e){
+      meApproved.textContent = "Error";
+      meClaimed.textContent = "Error";
+    }
+  }
+
+  async function refreshAll(){
+    await refreshNetworkUI();
+    await loadTokenMeta();
+    await loadAdminAndCap();
+    await getBalance();
+    await refreshMyEntitlementStatus();
+    unlockActions();
+  }
+
   // =========================
-  // Send tokens (admin)
+  // Send tokens (ADMIN SAFE)
   // =========================
   window.sendGBC = async function(){
     if (!signer){
@@ -470,6 +660,13 @@
     const cid = await getChainIdHex();
     if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
       alert("Please switch to Sepolia first.");
+      return;
+    }
+
+    await loadAdminAndCap();
+    if (!isAdminWallet()){
+      alert("Safety lock: connected wallet is not the on-chain admin().");
+      unlockActions();
       return;
     }
 
@@ -487,9 +684,19 @@
 
     try{
       setTxStatus("warn", "Transaction pending… please confirm in MetaMask.");
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+      const c = getWriteContract();
 
-      const tx = await contract.transfer(recipient, ethers.utils.parseUnits(String(amount), TOKEN_DECIMALS));
+      const valueWei = ethers.utils.parseUnits(String(amount), tokenDecimals);
+
+      // Prefer adminTransfer() for admin distribution. Fallback to transfer() if needed.
+      let tx;
+      if (typeof c.adminTransfer === "function") {
+        tx = await c.adminTransfer(recipient, valueWei);
+      } else {
+        // fallback (still admin-locked in UI)
+        tx = await c.transfer(recipient, valueWei);
+      }
+
       setTxStatus("warn", "Pending… waiting for confirmation on-chain.");
       await tx.wait();
 
@@ -497,7 +704,81 @@
       await getBalance();
     }catch(err){
       console.error(err);
-      setTxStatus("bad", "Transaction failed or cancelled.");
+      const msg = err?.data?.message || err?.message || "Transaction failed or cancelled.";
+      setTxStatus("bad", msg);
+    }
+  };
+
+  // =========================
+  // Admin tool: setApproved(user,bool)
+  // =========================
+  window.setApprovedUser = async function(){
+    if (!signer){
+      alert("Connect MetaMask first.");
+      return;
+    }
+    const cid = await getChainIdHex();
+    if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+      alert("Please switch to Sepolia first.");
+      return;
+    }
+
+    await loadAdminAndCap();
+    if (!isAdminWallet()){
+      alert("Safety lock: connected wallet is not the on-chain admin().");
+      unlockActions();
+      return;
+    }
+
+    const user = document.getElementById("approveUserAddr").value.trim();
+    const allowed = document.getElementById("approveUserBool").value === "true";
+
+    if (!ethers.utils.isAddress(user)){
+      alert("User address is not valid.");
+      return;
+    }
+
+    try{
+      setTxStatus("warn", "Approval pending… confirm in MetaMask.");
+      const c = getWriteContract();
+      const tx = await c.setApproved(user, allowed);
+      setTxStatus("warn", "Pending… waiting confirmation.");
+      await tx.wait();
+      setTxStatus("ok", allowed ? "Approved ✅ (user can claim)" : "Revoked ⛔ (user cannot claim)");
+      await refreshMyEntitlementStatus();
+    }catch(err){
+      console.error(err);
+      const msg = err?.data?.message || err?.message || "Approval failed/cancelled.";
+      setTxStatus("bad", msg);
+    }
+  };
+
+  // =========================
+  // User tool: claim()
+  // =========================
+  window.claimEntitlement = async function(){
+    if (!signer){
+      alert("Connect MetaMask first.");
+      return;
+    }
+    const cid = await getChainIdHex();
+    if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+      alert("Please switch to Sepolia first.");
+      return;
+    }
+    try{
+      setTxStatus("warn", "Claim pending… confirm in MetaMask.");
+      const c = getWriteContract();
+      const tx = await c.claim();
+      setTxStatus("warn", "Pending… waiting confirmation.");
+      await tx.wait();
+      setTxStatus("ok", "Claim successful ✅");
+      await getBalance();
+      await refreshMyEntitlementStatus();
+    }catch(err){
+      console.error(err);
+      const msg = err?.data?.message || err?.message || "Claim failed/cancelled.";
+      setTxStatus("bad", msg);
     }
   };
 
@@ -554,7 +835,9 @@
   (function init(){
     showWeb3HelpIfNeeded();
     refreshNetworkUI();
-    unlockSendIfReady();
+    loadTokenMeta();
+    loadAdminAndCap();
+    unlockActions();
   })();
 </script>
 
