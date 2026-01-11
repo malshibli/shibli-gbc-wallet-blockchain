@@ -28,7 +28,7 @@
     ul,ol{ text-align:left; padding-left:20px; margin:8px 0; }
     .row{ display:flex; gap:12px; flex-wrap:wrap; }
     .col{ flex:1; min-width:260px; }
-    input, button{
+    input, button, select, textarea{
       width:100%;
       padding:11px 12px;
       margin:7px 0;
@@ -37,6 +37,7 @@
       font-size:15px;
       box-sizing:border-box;
     }
+    textarea{ min-height:120px; resize:vertical; }
     button{
       background:var(--blue);
       color:#fff;
@@ -71,10 +72,61 @@
     .linkBtn{ background:#0f172a; }
     .linkBtn:hover{ background:#111c33; }
 
-    /* small helper layout blocks (added without changing your layout) */
+    /* small helper layout blocks */
     .miniGrid{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
     .miniGrid .pill{ flex:1; min-width:240px; }
     .divider{ border:none; border-top:1px solid #eef2f8; margin:14px 0; }
+
+    /* Phase 1 enhancements */
+    .toggleRow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .toggle{
+      display:flex; align-items:center; gap:10px; padding:10px 12px;
+      border:1px solid #cdd7e3; border-radius:12px; background:#fbfdff;
+      flex:1; min-width:260px;
+    }
+    .toggle input{ width:auto; margin:0; }
+    .tableWrap{
+      border:1px solid #e8eef7; border-radius:12px; overflow:hidden; margin-top:10px;
+    }
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
+    th, td{ padding:10px 10px; border-bottom:1px solid #eef2f8; text-align:left; vertical-align:top; }
+    th{ background:#f3f7ff; color:#274d86; font-weight:800; }
+    tr:last-child td{ border-bottom:none; }
+    .txLink{ color:var(--blue2); text-decoration:none; font-weight:700; }
+    .txLink:hover{ text-decoration:underline; }
+    .chip{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800;
+      border:1px solid #dbe7fb; background:#f6f9ff; color:#264a86;
+    }
+    .chip.ok{ border-color:#bfe8cf; background:#f3fff7; color:var(--ok); }
+    .chip.bad{ border-color:#f3c3c3; background:#fff5f5; color:var(--bad); }
+
+    /* Confirm modal */
+    .modalBackdrop{
+      position:fixed; inset:0; background:rgba(15, 23, 42, .55);
+      display:none; align-items:center; justify-content:center; padding:14px; z-index:9999;
+    }
+    .modal{
+      width:min(680px, 96vw);
+      background:#fff; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.22);
+      padding:16px;
+    }
+    .modal h3{ margin:0 0 10px 0; color:var(--blue); }
+    .modal .kv{ display:flex; gap:10px; flex-wrap:wrap; }
+    .modal .kv div{
+      flex:1; min-width:220px; border:1px solid #e8eef7; border-radius:12px; padding:10px;
+      background:#fbfdff;
+    }
+    .modal .kv b{ display:block; margin-bottom:4px; color:#244a84; }
+    .modal .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .modal .actions button{ flex:1; min-width:220px; }
+    .dangerBtn{ background:var(--bad); }
+    .dangerBtn:hover{ background:#991b1b; }
+
+    /* Email block */
+    .emailHeader{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .emailHeader .pill{ flex:1; min-width:240px; }
   </style>
 </head>
 
@@ -121,6 +173,7 @@
 
   <div class="section">
     <h2><i class="fas fa-user-check icon"></i>Request GBC</h2>
+    <!-- ✅ User request form unchanged (still goes to imurad2009@gmail.com) -->
     <form action="https://formsubmit.co/imurad2009@gmail.com" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="_subject" value="New GBC Request Submitted" />
       <input type="hidden" name="_captcha" value="false" />
@@ -184,18 +237,11 @@
       </div>
     </div>
 
-    <!-- ✅ Phase 1 enhancements added as extra pills (keeps your UI intact) -->
     <div class="miniGrid">
       <div class="pill"><i class="fa-solid fa-id-card"></i> On-chain Admin: <span id="adminLabel" class="mono">—</span></div>
       <div class="pill"><i class="fa-solid fa-lock"></i> Admin Access: <span id="adminAccess" class="status warn">Not connected</span></div>
       <div class="pill"><i class="fa-solid fa-coins"></i> Token: <span id="tokenMeta" class="mono">—</span></div>
       <div class="pill"><i class="fa-solid fa-gift"></i> Entitlement Cap: <span id="capLabel" class="mono">—</span></div>
-
-      <!-- ✅ NEW: Pause status (if contract supports paused()) -->
-      <div class="pill"><i class="fa-solid fa-circle-pause"></i> Contract Status: <span id="pauseStatus" class="status warn">—</span></div>
-
-      <!-- ✅ NEW: Treasury floor (if contract supports treasuryFloor()) -->
-      <div class="pill"><i class="fa-solid fa-vault"></i> Treasury Floor: <span id="floorLabel" class="mono">—</span></div>
     </div>
 
     <p><strong>Connected Wallet:</strong> <span id="walletAddress">Not Connected</span></p>
@@ -211,7 +257,80 @@
       <div class="pill"><i class="fa-solid fa-shield-halved"></i> Safety Lock</div>
       <p class="small" style="margin-top:10px;">
         Sending / Approving is <b>locked</b> unless your connected wallet matches the <b>on-chain admin()</b> address.
-        If the contract is <b>Paused</b>, all actions are locked.
+      </p>
+    </div>
+
+    <!-- ✅ Step 3: Email admin@virtualdigitum.com (added) -->
+    <hr class="divider" />
+    <h3 style="margin:14px 0 6px 0;"><i class="fas fa-envelope icon"></i>Admin Email (Step 3)</h3>
+
+    <div class="notice">
+      <div class="emailHeader">
+        <div class="pill"><i class="fa-solid fa-at"></i> Admin Email: <span class="mono">admin@virtualdigitum.com</span></div>
+        <div class="pill"><i class="fa-solid fa-circle-info"></i> Use this to send approval/claim details with one click</div>
+      </div>
+
+      <p class="small" style="margin-top:10px;">
+        This sends a structured message to <b>admin@virtualdigitum.com</b> using a secure form gateway. No private keys are sent.
+        (It can include your connected wallet, contract, network, recipient, and notes.)
+      </p>
+
+      <form id="adminEmailForm" action="https://formsubmit.co/admin@virtualdigitum.com" method="POST">
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_template" value="box" />
+        <!-- Optional: set a success redirect (customize if you have a thank-you page) -->
+        <input type="hidden" name="_next" value="" />
+
+        <div class="row">
+          <div class="col">
+            <input type="text" name="Subject" id="emailSubject" placeholder="Subject (auto-filled)" />
+            <input type="text" name="From Name" id="emailFromName" placeholder="Your Name (optional)" />
+            <input type="email" name="Reply-To" id="emailReplyTo" placeholder="Your Email (optional, so admin can reply)" />
+          </div>
+          <div class="col">
+            <input type="text" name="Connected Wallet" id="emailWallet" placeholder="Connected Wallet (auto)" readonly />
+            <input type="text" name="Contract" id="emailContract" placeholder="Contract (auto)" readonly />
+            <input type="text" name="Network" id="emailNetwork" placeholder="Network (auto)" readonly />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <input type="text" name="Target Wallet" id="emailTargetWallet" placeholder="Target wallet (recipient / approval wallet)" />
+          </div>
+          <div class="col">
+            <input type="text" name="Action" id="emailAction" placeholder="Action (Approve / Revoke / Claim / Send)" />
+          </div>
+        </div>
+
+        <textarea name="Message" id="emailMessage" placeholder="Write details here (auto-filled + editable)..."></textarea>
+
+        <div class="btnRow">
+          <button type="button" class="linkBtn" onclick="fillAdminEmailFromUI()">🧩 Auto-fill from current inputs</button>
+          <button type="submit"><i class="fas fa-paper-plane"></i> Send Email to Admin</button>
+        </div>
+
+        <p class="small" style="margin-top:8px;">
+          Tip: Click <b>Auto-fill</b> after you enter Recipient/Amount or Approval Address so the email includes the exact values you used.
+        </p>
+      </form>
+    </div>
+
+    <!-- ✅ Step 4: Anti-wrong-send controls -->
+    <div class="notice" id="sendSafetyBox" style="margin-top:12px;">
+      <div class="pill"><i class="fa-solid fa-shield"></i> Send Safety Controls</div>
+      <div class="toggleRow" style="margin-top:10px;">
+        <label class="toggle">
+          <input type="checkbox" id="onlyApprovedToggle" />
+          <span><b>Allow send ONLY to approved wallets</b><br><span class="small">Blocks transfers unless approved(recipient) == true (if contract supports).</span></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="confirmToggle" checked />
+          <span><b>Require double-confirm before sending</b><br><span class="small">Shows a confirmation screen + checkbox.</span></span>
+        </label>
+      </div>
+      <p class="small" style="margin-top:8px;">
+        Tip: Paste recipient address → we auto-check checksum, ENS (if used), and show a warning if invalid.
       </p>
     </div>
 
@@ -219,9 +338,11 @@
     <div class="row">
       <div class="col">
         <input type="text" id="sendAddress" placeholder="Recipient Wallet Address" />
+        <div class="small" id="recipientHint" style="margin-top:4px;"></div>
       </div>
       <div class="col">
         <input type="number" id="sendAmount" placeholder="Amount to Send" />
+        <div class="small" id="amountHint" style="margin-top:4px;"></div>
       </div>
     </div>
 
@@ -235,13 +356,48 @@
         <input type="text" id="approveUserAddr" placeholder="User wallet to approve (allow claim)" />
       </div>
       <div class="col">
-        <select id="approveUserBool" style="width:100%; padding:11px 12px; margin:7px 0; border-radius:10px; border:1px solid #cdd7e3; font-size:15px;">
+        <select id="approveUserBool">
           <option value="true">Approve ✅</option>
           <option value="false">Revoke ⛔</option>
         </select>
       </div>
     </div>
     <button id="approveBtn" onclick="setApprovedUser()" disabled><i class="fas fa-check-circle"></i> Set Approved (Admin Only)</button>
+
+    <!-- ✅ Step 2: Approvals History -->
+    <hr class="divider" />
+    <h3 style="margin:14px 0 6px 0;"><i class="fas fa-clock-rotate-left icon"></i>Approvals History (On-chain)</h3>
+    <p class="small">Shows recent <b>Approval</b> events (ERC-20). Export available.</p>
+
+    <div class="row">
+      <div class="col">
+        <input type="number" id="historyBlocks" placeholder="Look back blocks (e.g., 20000)" value="20000" />
+      </div>
+      <div class="col">
+        <input type="number" id="historyMax" placeholder="Max rows (e.g., 30)" value="30" />
+      </div>
+    </div>
+    <div class="btnRow">
+      <button id="loadHistoryBtn" onclick="loadApprovalHistory()" disabled>🔎 Load History</button>
+      <button class="linkBtn" onclick="exportHistoryCSV()">⬇️ Export CSV</button>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Wallet</th>
+            <th>Details</th>
+            <th>Block / Time</th>
+            <th>Tx</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="5" class="small">No history loaded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
 
     <hr class="divider" />
     <h3 style="margin:14px 0 6px 0;"><i class="fas fa-gift icon"></i>My Entitlement (On-chain)</h3>
@@ -278,21 +434,57 @@
     <div id="inboxResults" style="margin-top:10px;"></div>
   </div>
 
+  <!-- Confirm modal -->
+  <div class="modalBackdrop" id="confirmBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h3 id="confirmTitle"><i class="fa-solid fa-circle-check icon"></i> Confirm Send</h3>
+      <p class="small">Please verify all details. This action will request a MetaMask confirmation.</p>
+
+      <div class="kv">
+        <div>
+          <b>Recipient</b>
+          <div class="mono" id="confirmRecipient">—</div>
+        </div>
+        <div>
+          <b>Amount</b>
+          <div class="mono" id="confirmAmount">—</div>
+        </div>
+        <div>
+          <b>Network</b>
+          <div class="mono" id="confirmNetwork">—</div>
+        </div>
+        <div>
+          <b>Mode</b>
+          <div class="mono" id="confirmMode">—</div>
+        </div>
+      </div>
+
+      <div class="notice" style="margin-top:10px;">
+        <label class="toggle" style="margin:0;">
+          <input type="checkbox" id="confirmCheckbox" />
+          <span><b>I confirm the recipient & amount are correct.</b><br><span class="small">This reduces accidental sends.</span></span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="linkBtn" onclick="closeConfirm()">Cancel</button>
+        <button class="dangerBtn" id="confirmSendBtn" onclick="confirmAndSend()" disabled>Send Now</button>
+      </div>
+
+      <p class="small" style="margin-top:10px;" id="confirmError"></p>
+    </div>
+  </div>
+
 <script>
   // =========================================================
-  // ✅ Phase 1 "Go-Live Safety" Enhancements (UI kept intact)
-  // Added (safe + optional; works even if contract lacks these functions):
-  // 1) paused() read + UI status + automatic action lock when paused
-  // 2) treasuryFloor() read + UI display (optional)
-  // 3) Stronger send preflight:
-  //    - contract code exists
-  //    - recipient != zero address
-  //    - amount <= sender balance
-  //    - clearer MetaMask / on-chain error messaging
+  // ✅ Included:
+  // Step 2) Approvals History viewer + export
+  // Step 3) Email to admin@virtualdigitum.com (auto-fill)
+  // Step 4) Anti-wrong-send protections + confirm modal
   // =========================================================
 
   const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7"; // 11155111
-  const CONTRACT_ADDRESS = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD"; // <-- set to your deployed GBCEntitlement on Sepolia
+  const CONTRACT_ADDRESS = "0xa3181dFb7D3ED2D74955c2E48DaB1984B24947FD";
   const FALLBACK_DECIMALS = 18;
 
   const ERC20_MIN_ABI = [
@@ -301,6 +493,7 @@
     {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
     {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
     {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},
   ];
 
   const ENTITLEMENT_ABI = [
@@ -311,10 +504,6 @@
     {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
     {"inputs":[],"name":"claim","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
     {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"adminTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
-
-    // ✅ Optional Phase-1 safety (if your contract has them)
-    {"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"treasuryFloor","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
   ];
 
   let provider, signer, walletAddress;
@@ -322,10 +511,10 @@
   let cachedAdmin = null;
   let cachedCap = null;
 
-  // ✅ NEW Phase-1 state
-  let cachedPaused = null;     // true/false/null (if not available)
-  let cachedFloor = null;      // BigNumber/null
+  // History cache for export
+  let approvalsHistoryRows = [];
 
+  // DOM refs
   const web3Notice = document.getElementById("web3Notice");
   const walletEl = document.getElementById("walletAddress");
   const balEl = document.getElementById("balance");
@@ -345,9 +534,36 @@
   const meApproved = document.getElementById("meApproved");
   const meClaimed = document.getElementById("meClaimed");
 
-  // ✅ NEW UI refs
-  const pauseStatusEl = document.getElementById("pauseStatus");
-  const floorLabelEl = document.getElementById("floorLabel");
+  // Step 4 refs
+  const onlyApprovedToggle = document.getElementById("onlyApprovedToggle");
+  const confirmToggle = document.getElementById("confirmToggle");
+  const recipientHint = document.getElementById("recipientHint");
+  const amountHint = document.getElementById("amountHint");
+
+  // Step 2 refs
+  const loadHistoryBtn = document.getElementById("loadHistoryBtn");
+  const historyBody = document.getElementById("historyBody");
+  const historyBlocks = document.getElementById("historyBlocks");
+  const historyMax = document.getElementById("historyMax");
+
+  // Confirm modal refs
+  const confirmBackdrop = document.getElementById("confirmBackdrop");
+  const confirmRecipient = document.getElementById("confirmRecipient");
+  const confirmAmount = document.getElementById("confirmAmount");
+  const confirmNetwork = document.getElementById("confirmNetwork");
+  const confirmMode = document.getElementById("confirmMode");
+  const confirmCheckbox = document.getElementById("confirmCheckbox");
+  const confirmSendBtn = document.getElementById("confirmSendBtn");
+  const confirmError = document.getElementById("confirmError");
+
+  // Email refs (Step 3)
+  const emailSubject = document.getElementById("emailSubject");
+  const emailWallet = document.getElementById("emailWallet");
+  const emailContract = document.getElementById("emailContract");
+  const emailNetwork = document.getElementById("emailNetwork");
+  const emailTargetWallet = document.getElementById("emailTargetWallet");
+  const emailAction = document.getElementById("emailAction");
+  const emailMessage = document.getElementById("emailMessage");
 
   contractLabel.textContent = CONTRACT_ADDRESS;
   contractLabel.title = CONTRACT_ADDRESS;
@@ -365,22 +581,6 @@
   function setTxStatus(kind, text){
     txStatus.className = "status " + kind;
     txStatus.textContent = text;
-  }
-
-  function setPauseUI(pausedVal){
-    // pausedVal can be true/false/null
-    if (pausedVal === null){
-      pauseStatusEl.className = "status warn";
-      pauseStatusEl.textContent = "N/A";
-      return;
-    }
-    if (pausedVal){
-      pauseStatusEl.className = "status bad";
-      pauseStatusEl.textContent = "PAUSED ⛔";
-    } else {
-      pauseStatusEl.className = "status ok";
-      pauseStatusEl.textContent = "LIVE ✅";
-    }
   }
 
   function hasWeb3(){
@@ -488,39 +688,6 @@
     }
   }
 
-  // ✅ NEW: load paused + treasury floor safely
-  async function loadSafetyState(){
-    cachedPaused = null;
-    cachedFloor = null;
-    setPauseUI(null);
-    floorLabelEl.textContent = "—";
-
-    try{
-      if (!provider) return;
-      const c = getReadContract();
-
-      // paused() optional
-      const p = await c.paused().catch(()=>null);
-      if (typeof p === "boolean") cachedPaused = p;
-      else if (p !== null && p !== undefined) cachedPaused = !!p;
-      setPauseUI(cachedPaused);
-
-      // treasuryFloor() optional
-      const floor = await c.treasuryFloor().catch(()=>null);
-      cachedFloor = floor || null;
-      if (cachedFloor){
-        floorLabelEl.textContent = ethers.utils.formatUnits(cachedFloor, tokenDecimals) + " GBC";
-      } else {
-        floorLabelEl.textContent = "N/A";
-      }
-    }catch(_e){
-      cachedPaused = null;
-      cachedFloor = null;
-      setPauseUI(null);
-      floorLabelEl.textContent = "—";
-    }
-  }
-
   function isAdminWallet(){
     if (!walletAddress || !cachedAdmin) return false;
     return walletAddress.toLowerCase() === cachedAdmin.toLowerCase();
@@ -530,37 +697,103 @@
     return (netLabel.textContent || "").toLowerCase().includes("sepolia");
   }
 
-  function isPaused(){
-    return cachedPaused === true;
+  // ✅ Step 3 helper: populate email block
+  function updateEmailAutofillBasics(){
+    emailWallet.value = walletAddress ? walletAddress : "";
+    emailContract.value = CONTRACT_ADDRESS;
+    emailNetwork.value = onSepolia() ? "Sepolia" : (netLabel.textContent || "");
+    if (!emailSubject.value){
+      emailSubject.value = `GBC Admin Action Request — ${new Date().toLocaleString()}`;
+    }
+    if (!emailMessage.value){
+      emailMessage.value =
+`Hello Admin,
+
+Please review the request below:
+
+- Connected Wallet: ${walletAddress || "Not connected"}
+- Contract: ${CONTRACT_ADDRESS}
+- Network: ${onSepolia() ? "Sepolia" : (netLabel.textContent || "Unknown")}
+- Action: (fill)
+- Target Wallet: (fill)
+- Notes:
+
+Thank you.`;
+    }
   }
+
+  window.fillAdminEmailFromUI = async function(){
+    updateEmailAutofillBasics();
+
+    // Try to pick a "target wallet" based on current fields:
+    const sendAddr = document.getElementById("sendAddress").value.trim();
+    const approveAddr = document.getElementById("approveUserAddr").value.trim();
+
+    let target = sendAddr || approveAddr || "";
+    if (target && provider){
+      // Resolve ENS if user typed it
+      if (target.includes(".")){
+        try{
+          const resolved = await provider.resolveName(target);
+          if (resolved && ethers.utils.isAddress(resolved)) target = ethers.utils.getAddress(resolved);
+        }catch(_e){}
+      }
+    }
+
+    emailTargetWallet.value = target;
+
+    // Infer action
+    let action = "Review";
+    if (sendAddr) action = "Send Approved GBC";
+    else if (approveAddr) {
+      const allowed = document.getElementById("approveUserBool").value === "true";
+      action = allowed ? "Approve Wallet" : "Revoke Wallet";
+    }
+    emailAction.value = action;
+
+    // Build a richer message
+    const amount = document.getElementById("sendAmount").value;
+    const allowed = document.getElementById("approveUserBool").value === "true";
+
+    const lines = [];
+    lines.push("Hello Admin,");
+    lines.push("");
+    lines.push("Please review the request below:");
+    lines.push("");
+    lines.push(`- Connected Wallet: ${walletAddress || "Not connected"}`);
+    lines.push(`- Contract: ${CONTRACT_ADDRESS}`);
+    lines.push(`- Network: ${onSepolia() ? "Sepolia" : (netLabel.textContent || "Unknown")}`);
+    lines.push(`- Action: ${action}`);
+    lines.push(`- Target Wallet: ${target || "(not provided)"}`);
+
+    if (action === "Send Approved GBC") {
+      lines.push(`- Amount: ${amount || "(not provided)"} GBC`);
+      lines.push(`- Safety Mode: ${onlyApprovedToggle.checked ? "Approved-only ON" : "Approved-only OFF"} | ${confirmToggle.checked ? "Double-confirm ON" : "Double-confirm OFF"}`);
+    } else if (action === "Approve Wallet" || action === "Revoke Wallet") {
+      lines.push(`- setApproved: ${allowed ? "true (Approve)" : "false (Revoke)"}`);
+    }
+
+    lines.push("");
+    lines.push("Notes:");
+    lines.push("(add any notes here)");
+    lines.push("");
+    lines.push("Thank you.");
+
+    emailMessage.value = lines.join("\n");
+  };
 
   function unlockActions(){
     const connected = !!signer && !!walletAddress;
     const sep = onSepolia();
     const adminOk = isAdminWallet();
-    const pausedNow = isPaused();
 
-    // Show safety note if:
-    // - connected but not admin (for admin actions) OR
-    // - wrong net OR
-    // - paused
-    adminSafetyNote.style.display = (connected && (!adminOk || !sep || pausedNow)) ? "block" : "none";
+    adminSafetyNote.style.display = (connected && (!adminOk || !sep)) ? "block" : "none";
 
-    // ✅ Phase 1 lock when paused
-    if (pausedNow){
-      sendBtn.disabled = true;
-      approveBtn.disabled = true;
-      claimBtn.disabled = true;
-
-      adminAccess.className = "status bad";
-      adminAccess.textContent = "Paused ⛔";
-      return;
-    }
-
-    // Keep your features exactly the same, just add guards:
     sendBtn.disabled = !(connected && sep && adminOk);
     approveBtn.disabled = !(connected && sep && adminOk);
     claimBtn.disabled = !(connected && sep);
+
+    loadHistoryBtn.disabled = !(connected && sep);
 
     if (!connected) {
       adminAccess.className = "status warn";
@@ -575,6 +808,9 @@
       adminAccess.className = "status bad";
       adminAccess.textContent = "Not admin ⛔";
     }
+
+    // keep email fields up to date
+    updateEmailAutofillBasics();
   }
 
   window.switchToSepolia = async function(){
@@ -624,7 +860,6 @@
       walletAddress = await signer.getAddress();
       walletEl.textContent = shortAddr(walletAddress);
 
-      // Event listeners
       window.ethereum.on?.("accountsChanged", async () => {
         try{
           signer = provider.getSigner();
@@ -646,6 +881,8 @@
       } else {
         setTxStatus("ok", "Connected. Ready.");
       }
+
+      updateEmailAutofillBasics();
     }catch(err){
       console.error(err);
       alert("Connection failed or cancelled.");
@@ -710,42 +947,113 @@
 
     await loadTokenMeta();
     await loadAdminAndCap();
-    await loadSafetyState();      // ✅ NEW
     await getBalance();
     await refreshMyEntitlementStatus();
     unlockActions();
   }
 
-  // ✅ Better error message extraction
-  function extractEthersError(err){
-    const raw =
-      err?.error?.message ||
-      err?.data?.message ||
-      err?.reason ||
-      err?.message ||
-      "Transaction failed or cancelled.";
-    // keep it short for UI
-    return String(raw).slice(0, 220);
+  // =========================
+  // Step 4: Recipient validation (checksum + ENS)
+  // =========================
+  async function resolveRecipient(inputValue){
+    const raw = (inputValue || "").trim();
+    if (!raw) return { ok:false, address:null, display:"", warning:"" };
+
+    if (raw.includes(".") && provider){
+      try{
+        const resolved = await provider.resolveName(raw);
+        if (resolved && ethers.utils.isAddress(resolved)){
+          const checksummed = ethers.utils.getAddress(resolved);
+          return { ok:true, address:checksummed, display:`${raw} → ${shortAddr(checksummed)}`, warning:"" };
+        }
+        return { ok:false, address:null, display:raw, warning:"Could not resolve ENS name." };
+      }catch(_e){
+        return { ok:false, address:null, display:raw, warning:"ENS lookup failed." };
+      }
+    }
+
+    if (!ethers.utils.isAddress(raw)){
+      return { ok:false, address:null, display:raw, warning:"Invalid address format." };
+    }
+    try{
+      const checksummed = ethers.utils.getAddress(raw);
+      return { ok:true, address:checksummed, display:shortAddr(checksummed), warning:"" };
+    }catch(_e){
+      return { ok:false, address:null, display:raw, warning:"Address checksum failed." };
+    }
   }
 
-  // ✅ Preflight send checks
-  async function sendPreflight(recipient, amountStr){
-    if (!ethers.utils.isAddress(recipient)) throw new Error("Recipient address is not valid.");
-    if (recipient.toLowerCase() === "0x0000000000000000000000000000000000000000") throw new Error("Recipient cannot be the zero address.");
-    if (!amountStr || Number(amountStr) <= 0) throw new Error("Enter a valid amount.");
+  let recipientResolveTimer = null;
+  document.getElementById("sendAddress").addEventListener("input", () => {
+    clearTimeout(recipientResolveTimer);
+    recipientHint.textContent = "";
+    recipientResolveTimer = setTimeout(async () => {
+      const v = document.getElementById("sendAddress").value;
+      const r = await resolveRecipient(v);
+      if (!v.trim()){
+        recipientHint.innerHTML = "";
+        return;
+      }
+      if (r.ok){
+        recipientHint.innerHTML = `<span class="chip ok"><i class="fa-solid fa-check"></i> Valid</span> <span class="mono">${r.display}</span>`;
+      } else {
+        recipientHint.innerHTML = `<span class="chip bad"><i class="fa-solid fa-xmark"></i> Invalid</span> <span class="mono">${r.display}</span> <span class="small"> ${r.warning}</span>`;
+      }
+    }, 300);
+  });
 
-    // If paused, block
-    if (isPaused()) throw new Error("Contract is paused.");
+  document.getElementById("sendAmount").addEventListener("input", () => {
+    const a = document.getElementById("sendAmount").value;
+    if (!a) { amountHint.textContent = ""; return; }
+    if (Number(a) <= 0) amountHint.innerHTML = `<span class="chip bad"><i class="fa-solid fa-xmark"></i> Invalid</span> <span class="small">Amount must be > 0</span>`;
+    else amountHint.innerHTML = `<span class="chip ok"><i class="fa-solid fa-check"></i> OK</span> <span class="small">Will send ${a} GBC</span>`;
+  });
 
-    // Optional: ensure enough balance
-    const c = getWriteContract();
-    const bal = await c.balanceOf(walletAddress);
-    const valueWei = ethers.utils.parseUnits(String(amountStr), tokenDecimals);
-    if (valueWei.gt(bal)) throw new Error("Insufficient GBC balance for this send.");
+  // Confirm modal helpers
+  function openConfirm(payload){
+    confirmError.textContent = "";
+    confirmCheckbox.checked = false;
+    confirmSendBtn.disabled = true;
 
-    return valueWei;
+    confirmRecipient.textContent = payload.recipientDisplay || payload.recipient;
+    confirmAmount.textContent = payload.amount + " GBC";
+    confirmNetwork.textContent = "Sepolia";
+    confirmMode.textContent = payload.mode;
+
+    confirmBackdrop.style.display = "flex";
+    confirmBackdrop.setAttribute("aria-hidden", "false");
+
+    confirmCheckbox.onchange = () => {
+      confirmSendBtn.disabled = !confirmCheckbox.checked;
+    };
+
+    window.__pendingSend = payload;
   }
 
+  function closeConfirm(){
+    confirmBackdrop.style.display = "none";
+    confirmBackdrop.setAttribute("aria-hidden", "true");
+    window.__pendingSend = null;
+  }
+
+  window.closeConfirm = closeConfirm;
+
+  window.confirmAndSend = async function(){
+    const payload = window.__pendingSend;
+    if (!payload) return;
+
+    try{
+      confirmSendBtn.disabled = true;
+      confirmError.textContent = "";
+      await doSend(payload);
+      closeConfirm();
+    }catch(e){
+      confirmError.textContent = e?.message || "Send failed.";
+      confirmSendBtn.disabled = false;
+    }
+  };
+
+  // Send flow
   window.sendGBC = async function(){
     if (!signer){
       alert("Connect MetaMask first.");
@@ -758,49 +1066,91 @@
     }
 
     await loadAdminAndCap();
-    await loadSafetyState();
-    unlockActions();
-
-    if (isPaused()){
-      alert("Contract is paused. Sending is locked.");
-      return;
-    }
-
     if (!isAdminWallet()){
       alert("Safety lock: connected wallet is not the on-chain admin().");
       unlockActions();
       return;
     }
 
-    const recipient = document.getElementById("sendAddress").value.trim();
+    const rawRecipient = document.getElementById("sendAddress").value.trim();
     const amount = document.getElementById("sendAmount").value;
 
-    try{
-      setTxStatus("warn", "Preflight checks…");
-      const valueWei = await sendPreflight(recipient, amount);
+    if (!amount || Number(amount) <= 0){
+      alert("Enter a valid amount.");
+      return;
+    }
 
+    const rr = await resolveRecipient(rawRecipient);
+    if (!rr.ok){
+      alert("Recipient is not valid: " + (rr.warning || "Invalid"));
+      return;
+    }
+    const recipient = rr.address;
+
+    if (onlyApprovedToggle.checked){
+      try{
+        const cRead = getReadContract();
+        const ok = await cRead.approved(recipient).catch(()=>null);
+        if (ok === null){
+          alert("This contract does not expose approved(address). Toggle off 'ONLY approved wallets' or update contract.");
+          return;
+        }
+        if (!ok){
+          alert("Blocked: Recipient is NOT approved on-chain.");
+          return;
+        }
+      }catch(e){
+        alert("Could not verify recipient approval. Try again.");
+        return;
+      }
+    }
+
+    const payload = {
+      recipient,
+      recipientDisplay: rr.display,
+      amount: String(amount),
+      mode: onlyApprovedToggle.checked ? "Admin Transfer (Approved-only ON)" : "Admin Transfer"
+    };
+
+    if (confirmToggle.checked){
+      openConfirm(payload);
+      return;
+    }
+    await doSend(payload);
+  };
+
+  async function doSend(payload){
+    const cid = await getChainIdHex();
+    if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+      throw new Error("Wrong network. Switch to Sepolia.");
+    }
+
+    try{
       setTxStatus("warn", "Transaction pending… please confirm in MetaMask.");
       const c = getWriteContract();
+      const valueWei = ethers.utils.parseUnits(String(payload.amount), tokenDecimals);
 
-      // Prefer adminTransfer (your contract). Fallback to transfer.
       let tx;
       try{
-        tx = await c.adminTransfer(recipient, valueWei);
+        tx = await c.adminTransfer(payload.recipient, valueWei);
       }catch(_e){
-        tx = await c.transfer(recipient, valueWei);
+        tx = await c.transfer(payload.recipient, valueWei);
       }
 
       setTxStatus("warn", "Pending… waiting for confirmation on-chain.");
       await tx.wait();
 
-      setTxStatus("ok", "Transaction successful ✅");
+      setTxStatus("ok", `Transaction successful ✅ Sent ${payload.amount} GBC to ${shortAddr(payload.recipient)}`);
       await getBalance();
     }catch(err){
       console.error(err);
-      setTxStatus("bad", extractEthersError(err));
+      const msg = err?.data?.message || err?.message || "Transaction failed or cancelled.";
+      setTxStatus("bad", msg);
+      throw err;
     }
-  };
+  }
 
+  // Admin setApproved
   window.setApprovedUser = async function(){
     if (!signer){
       alert("Connect MetaMask first.");
@@ -813,27 +1163,21 @@
     }
 
     await loadAdminAndCap();
-    await loadSafetyState();
-    unlockActions();
-
-    if (isPaused()){
-      alert("Contract is paused. Approvals are locked.");
-      return;
-    }
-
     if (!isAdminWallet()){
       alert("Safety lock: connected wallet is not the on-chain admin().");
       unlockActions();
       return;
     }
 
-    const user = document.getElementById("approveUserAddr").value.trim();
+    const userRaw = document.getElementById("approveUserAddr").value.trim();
     const allowed = document.getElementById("approveUserBool").value === "true";
 
-    if (!ethers.utils.isAddress(user)){
-      alert("User address is not valid.");
+    const rr = await resolveRecipient(userRaw);
+    if (!rr.ok){
+      alert("User address is not valid: " + (rr.warning || "Invalid"));
       return;
     }
+    const user = rr.address;
 
     try{
       setTxStatus("warn", "Approval pending… confirm in MetaMask.");
@@ -841,14 +1185,18 @@
       const tx = await c.setApproved(user, allowed);
       setTxStatus("warn", "Pending… waiting confirmation.");
       await tx.wait();
-      setTxStatus("ok", allowed ? "Approved ✅ (user can claim)" : "Revoked ⛔ (user cannot claim)");
-      await refreshMyEntitlementStatus();
+      setTxStatus("ok", allowed ? `Approved ✅ ${shortAddr(user)} (can claim)` : `Revoked ⛔ ${shortAddr(user)} (cannot claim)`);
+
+      // Optional convenience: autofill email with this action
+      fillAdminEmailFromUI();
     }catch(err){
       console.error(err);
-      setTxStatus("bad", extractEthersError(err));
+      const msg = err?.data?.message || err?.message || "Approval failed/cancelled.";
+      setTxStatus("bad", msg);
     }
   };
 
+  // Claim
   window.claimEntitlement = async function(){
     if (!signer){
       alert("Connect MetaMask first.");
@@ -859,15 +1207,6 @@
       alert("Please switch to Sepolia first.");
       return;
     }
-
-    await loadSafetyState();
-    unlockActions();
-
-    if (isPaused()){
-      alert("Contract is paused. Claims are locked.");
-      return;
-    }
-
     try{
       setTxStatus("warn", "Claim pending… confirm in MetaMask.");
       const c = getWriteContract();
@@ -877,13 +1216,131 @@
       setTxStatus("ok", "Claim successful ✅");
       await getBalance();
       await refreshMyEntitlementStatus();
+
+      // Optional convenience: autofill email with this action
+      fillAdminEmailFromUI();
     }catch(err){
       console.error(err);
-      setTxStatus("bad", extractEthersError(err));
+      const msg = err?.data?.message || err?.message || "Claim failed/cancelled.";
+      setTxStatus("bad", msg);
     }
   };
 
-  // Minor fields + P2P inbox (demo) - unchanged
+  // Step 2: approvals history
+  function etherscanTxUrl(txHash){
+    return "https://sepolia.etherscan.io/tx/" + txHash;
+  }
+
+  async function getBlockTimestamp(blockNumber){
+    try{
+      const b = await provider.getBlock(blockNumber);
+      if (!b) return null;
+      const d = new Date(b.timestamp * 1000);
+      return d.toLocaleString();
+    }catch(_e){
+      return null;
+    }
+  }
+
+  function renderHistoryTable(rows){
+    approvalsHistoryRows = rows.slice();
+    if (!rows.length){
+      historyBody.innerHTML = `<tr><td colspan="5" class="small">No events found in the selected range.</td></tr>`;
+      return;
+    }
+    let html = "";
+    rows.forEach(r => {
+      const chipClass = r.kind === "Approval" ? "ok" : (r.kind === "Approved" ? "ok" : "bad");
+      const chipText = r.kind;
+      html += `
+        <tr>
+          <td><span class="chip ${chipClass}">${chipText}</span></td>
+          <td class="mono">${r.wallet || "—"}</td>
+          <td class="mono">${r.details || "—"}</td>
+          <td class="mono">${r.block || "—"}<br><span class="small">${r.time || ""}</span></td>
+          <td class="mono"><a class="txLink" href="${etherscanTxUrl(r.tx)}" target="_blank" rel="noreferrer">View</a><br>${shortAddr(r.tx)}</td>
+        </tr>
+      `;
+    });
+    historyBody.innerHTML = html;
+  }
+
+  window.loadApprovalHistory = async function(){
+    if (!provider || !walletAddress){
+      alert("Connect MetaMask first.");
+      return;
+    }
+    const cid = await getChainIdHex();
+    if (!cid || cid.toLowerCase() !== SEPOLIA_CHAIN_ID_HEX){
+      alert("Switch to Sepolia first.");
+      return;
+    }
+
+    const lookback = Math.max(100, Number(historyBlocks.value || 20000));
+    const maxRows = Math.min(200, Math.max(5, Number(historyMax.value || 30)));
+
+    try{
+      setTxStatus("warn", "Loading history…");
+      const currentBlock = await provider.getBlockNumber();
+      const fromBlock = Math.max(0, currentBlock - lookback);
+
+      const c = getReadContract();
+      const approvalFilter = c.filters.Approval(null, null);
+      const approvalEvents = await c.queryFilter(approvalFilter, fromBlock, currentBlock);
+
+      const rows = [];
+      const sliced = approvalEvents.slice(-maxRows).reverse();
+
+      for (const ev of sliced){
+        const owner = ev.args?.owner ? ethers.utils.getAddress(ev.args.owner) : null;
+        const spender = ev.args?.spender ? ethers.utils.getAddress(ev.args.spender) : null;
+        const value = ev.args?.value;
+        const formattedValue = value ? ethers.utils.formatUnits(value, tokenDecimals) : "—";
+        const time = await getBlockTimestamp(ev.blockNumber);
+
+        rows.push({
+          kind: "Approval",
+          wallet: owner ? shortAddr(owner) : "—",
+          details: spender ? `spender ${shortAddr(spender)} • value ${formattedValue}` : `value ${formattedValue}`,
+          block: ev.blockNumber,
+          time: time || "",
+          tx: ev.transactionHash
+        });
+      }
+
+      renderHistoryTable(rows);
+      setTxStatus("ok", `History loaded ✅ Found ${approvalEvents.length} Approval event(s) in range.`);
+    }catch(err){
+      console.error(err);
+      setTxStatus("bad", err?.message || "Failed to load history.");
+      renderHistoryTable([]);
+    }
+  };
+
+  window.exportHistoryCSV = function(){
+    const rows = approvalsHistoryRows || [];
+    if (!rows.length){
+      alert("No history to export. Click 'Load History' first.");
+      return;
+    }
+    const header = ["Type","Wallet","Details","Block","Time","Tx"].join(",");
+    const lines = rows.map(r => {
+      const esc = (s)=> `"${String(s||"").replaceAll('"','""')}"`;
+      return [r.kind, r.wallet, r.details, r.block, r.time, r.tx].map(esc).join(",");
+    });
+    const csv = [header, ...lines].join("\n");
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "gbc_approvals_history.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  // Minor fields + P2P demo
   window.toggleMinorFields = function(){
     const checkbox = document.getElementById("claimingMinor");
     const section = document.getElementById("minorSection");
@@ -930,12 +1387,12 @@
     }
   };
 
+  // Init
   (function init(){
     showWeb3HelpIfNeeded();
     refreshNetworkUI();
     contractLabel.textContent = CONTRACT_ADDRESS;
-    setPauseUI(null);
-    floorLabelEl.textContent = "—";
+    updateEmailAutofillBasics();
     unlockActions();
   })();
 </script>
